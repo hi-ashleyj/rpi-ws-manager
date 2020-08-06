@@ -4,6 +4,7 @@ let fs = fsSync.promises;
 let path = require("path");
 let url = require("url");
 let http = require("http");
+let child_process = require("child_process");
 
 let networkingPort = 80;
 
@@ -19,8 +20,15 @@ if (!fsSync.existsSync(documentsFolder)) { // Create folders and default users
     }
 }
 
+let servers = {
 
-var handleAllRequests = function(req, res) {
+};
+
+let spawnServer = function() {
+    
+};
+
+let handleAllRequests = function(req, res) {
     let parseIt = url.parse(req.url, true);
     let pathed = path.parse(req.url);
 
@@ -29,7 +37,7 @@ var handleAllRequests = function(req, res) {
 
     if (req.method == "GET" && !parseIt.search) {
         // This handles sending the pages required.
-        var pathpath = __dirname + "/remote" + parseIt.pathname + needsIndex;
+        let pathpath = __dirname + "/remote" + parseIt.pathname + needsIndex;
 
         if (fsSync.existsSync(pathpath)) {
             if (pathed.ext == ".html") {
