@@ -29,7 +29,7 @@ var handleAllRequests = function(req, res) {
 
     if (req.method == "GET" && !parseIt.search) {
         // This handles sending the pages required.
-        var pathpath = __dirname + ((pathed.dir.startsWith("/fonts")) ? "/display" : "/client") + parseIt.pathname + needsIndex;
+        var pathpath = __dirname + "/remote" + parseIt.pathname + needsIndex;
 
         if (fsSync.existsSync(pathpath)) {
             if (pathed.ext == ".html") {
