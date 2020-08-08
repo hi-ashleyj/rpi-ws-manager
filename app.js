@@ -29,7 +29,7 @@ if (!fsSync.existsSync(documentsFolder)) { // Create folders and default users
             await fs.writeFile(path.resolve(documentsFolder, "servers.json"), "{}");
         });
     } catch (_err) {
-
+        
     }
 } else {
     fs.readFile(path.resolve(documentsFolder, "servers.json"), {encoding: "utf8"}).then((data) => {

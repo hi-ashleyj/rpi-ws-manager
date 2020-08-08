@@ -10,6 +10,69 @@ html, body {
     color: white;
 }
 
+button.button {
+    background: black;
+    color: white;
+    border: 1px solid #777777;
+    border-radius: 8px;
+    filter: drop-shadow(0px 0px 5px black);
+
+    transition-property: border, background-color;
+    transition-duration: 0.25s;
+    padding: 0.5rem;
+}
+
+button.button:disabled {
+    border: 1px solid #333333;
+}
+
+button.button:hover:not(:disabled) {
+    border: 1px solid #ffffff;
+}
+
+button.button:focus:not(:disabled)  {
+    border: 1px solid #999999;
+    outline: none;
+}
+
+button.button:active:not(:disabled) {
+    background: white;
+}
+
+button.button.toggle[data-checked] {
+    background: #7700cc;
+}
+
+input[type="text"] {
+    display: inline-block;
+    color: inherit;
+    background: none;
+    font-size: inherit;
+    width: 100%;
+    
+    border: none;
+    border-bottom: 2px solid #777777;
+    padding: 0.5rem;
+
+    transition-duration: 0.35s;
+    transition-property: border, color;
+    will-change: border, color;
+}
+
+input[type="text"][data-error] {
+    border-bottom: 2px solid #ff0000;
+    color: red;
+}
+
+input[type="text"]:focus {
+    border-bottom: 2px solid #ffffff;
+    outline: none;
+}
+
+
+
+
+
 div.config, div.files, div.edit {
     width: 50vw;
     min-width: 300px;
@@ -22,7 +85,7 @@ div.config, div.files, div.edit {
     margin-right: auto;
     border: 1px solid #333333;
     border-radius: 1rem;
-    background: #222222;
+    background: #171717;
 
     display: none;
 }
@@ -39,3 +102,20 @@ body[data-mode="files"] div.files {
     display: block;
 }
 
+div.server-line.cont {
+    padding: 1rem;
+    margin: 1rem;
+    border-radius: 1rem;
+    background: #222222;
+    border: 1px solid #333333;
+
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    text-align: center; 
+    align-items: center;
+    gap: 1rem;
+}
+
+div.server-line.cont:not([data-id]) {
+    background: #333333;
+}
