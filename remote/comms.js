@@ -16,7 +16,7 @@ Comms.get = function(method, body) {
         } else {
             request.send();
         }
-    })
+    });
 };
 
 Comms.post = function(method, body) {
@@ -34,6 +34,6 @@ Comms.post = function(method, body) {
         } else {
             request.send();
         }
-    })
+    });
 };
 
