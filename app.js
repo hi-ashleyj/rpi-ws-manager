@@ -164,6 +164,10 @@ Requests.newServer = function(_req, res, data) {
     }
 }
 
+Requests.updateServer = function(req, res, data) {
+    let body = JSON.parse(data.toString("utf8"))
+};
+
 
 
 

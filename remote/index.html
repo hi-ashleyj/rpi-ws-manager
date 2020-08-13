@@ -15,16 +15,29 @@
                     <input class="server-line port" type="text" placeholder="Port">
                     <button class="button toggle server-line runonboot">Run On Boot</button>
                     <input class="server-line runfile" type="text" placeholder="File to Run">
-                    <button class="button server-line update">Create</button>
+                    <button class="button server-line create">Create</button>
                 </div>
             </div>
             <div class="configcanvas"></div>
         </div>
         <div class="edit">
-            
+            <div class="editor inside server-line cont">
+                <div class="editor id"></div>
+                <input class="editor alias" type="text" placeholder="Alias">
+                <input class="editor port" type="text" placeholder="Port">
+                <button class="button toggle editor runonboot">Run On Boot</button>
+                <input class="editor runfile" type="text" placeholder="File to Run">
+                <button class="button editor update">Update</button>
+            </div>
+            <button class="button editor start">Start</button><br />
+            <button class="button editor shutdown">Stop</button><br />
+            <button class="button editor reboot">Restart</button><br />
+            <button class="button editor fileman">Manage Files</button><br />
+            <button class="button editor delete">Delete</button><br />
+            <button class="button editor return">Back</button><br />
         </div>
         <div class="files">
-            
+
         </div>
         <script src="NotQuery.js"></script>
         <script src="file.js"></script>
