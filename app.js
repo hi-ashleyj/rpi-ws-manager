@@ -18,7 +18,7 @@ Manager.servers = {};
  *      alias: "",
  *      port: "",
  *      runatboot: (true|false),
- *      runfile: [app.js] (or similar array of path)
+ *      runfile: "app.js" (or similar array of path)
  * }
  */
 
