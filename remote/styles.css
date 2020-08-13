@@ -22,6 +22,11 @@ button.button {
     padding: 0.5rem;
 }
 
+.subtitle {
+    font-style: italic;
+    opacity: 0.6;
+}
+
 button.button:disabled {
     border: 1px solid #333333;
 }
@@ -104,7 +109,8 @@ body[data-mode="files"] div.files {
 
 div.server-line.cont {
     padding: 1rem;
-    margin: 1rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
     border-radius: 1rem;
     background: #222222;
     border: 1px solid #333333;
@@ -118,4 +124,22 @@ div.server-line.cont {
 
 div.server-line.cont:not([data-id]) {
     background: #333333;
+}
+
+
+
+
+div.editor.staging {
+    display: none;
+    font-style: italic;
+    color: white;
+    background-color: #7700cc;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+div.editor.staging[data-active] {
+    display: block;
 }

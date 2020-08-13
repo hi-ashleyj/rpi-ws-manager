@@ -24,6 +24,7 @@ Home.servers.get = async function(id) {
 };
 
 let UI = {};
+UI.editing;
 UI.Presets = {};
 
 UI.Presets.ButtonToggle = function(button) {
@@ -41,26 +42,7 @@ UI.Presets.ButtonToggle = function(button) {
 
 UI.Presets.ButtonToggle(find("button.button.toggle"));
 
-UI.showEdit = async function(id) {
-    document.body.attr("data-mode", "edit");
 
-    // Do something
-
-    console.log(await Home.servers.get(id))
-};
-
-UI.showConfig = async function() {
-    try {
-        let ssvvrr = await Home.servers.list();
-        find("div.configcanvas").innerHTML = "";
-        for (let i in ssvvrr) {
-            UI.Components.serverLine(ssvvrr[i]);
-        }
-        document.body.attr("data-mode", "config");
-    } catch (err) {
-        console.log(err);
-    }
-};
 
 
 UI.Components = {};
@@ -86,8 +68,50 @@ UI.Components.serverLine = function(payload) {
 
 
 
+UI.showEdit = async function(id) {
+    let info = await Home.servers.get(id);
+    UI.editing = info;
 
+    find(".editor.id").chng("innerText", info.id);
+    find(".editor.alias:not(input)").chng("innerText", info.alias);
+    find("input.editor.alias").chng("value", info.alias);
+    find("input.editor.port").chng("value", info.port);
+    if (info.runonboot) {
+        find("button.toggle.editor.runonboot").attr("data-checked", true);
+    } else {
+        find("button.toggle.editor.runonboot").rmtr("data-checked", true);
+    }
+    find("input.editor.runfile").chng("value", info.runfile);
+    find("div.editor.staging").rmtr("data-active");
+
+    if (info.running) {
+        find("button.button.editor.fileman").chng("hidden", true);
+        find("button.button.editor.power").chng("innerText", "Stop");
+    } else {
+        find("button.button.editor.fileman").chng("hidden", false);
+        find("button.button.editor.power").chng("innerText", "Start");
+    }
+
+    document.body.attr("data-mode", "edit");
+};
+
+UI.showConfig = async function() {
+    try {
+        let ssvvrr = await Home.servers.list();
+        find("div.configcanvas").innerHTML = "";
+        for (let i in ssvvrr) {
+            UI.Components.serverLine(ssvvrr[i]);
+        }
+        document.body.attr("data-mode", "config");
+    } catch (err) {
+        console.log(err);
+    }
+};
 
 
 
 UI.showConfig();
+
+find("button.button.editor.return").when("click", UI.showConfig);
+
+find("button.button.editor.update").when("click", UI.updateInfo);

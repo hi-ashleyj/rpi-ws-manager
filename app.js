@@ -7,6 +7,11 @@ let http = require("http");
 let child_process = require("child_process");
 const { parse } = require("path");
 
+let r403 = function(res) {
+    res.writeHead(403, http.STATUS_CODES[403]);
+    res.end();
+};
+
 let networkingPort = 80;
 
 let Manager = {};
@@ -22,7 +27,9 @@ Manager.servers = {};
  * }
  */
 
-Manager.runningServers = {};
+Manager.runningServers = {
+    1212: "boi"
+};
 
 let documentsFolder = path.resolve(os.homedir(), "rpi-ws-manager");
 
@@ -76,12 +83,27 @@ Manager.newServer = async function(payload) {
     }
 };
 
+Manager.updateServer = function(payload) {
+    if (payload && payload.id && Manager.servers[id]) {
+        Object.assign(Manager.servers[id], payload);
+        return Manager.servers[id];
+    } else {
+        return null;
+    }
+};
+
 Manager.listFiles = function(id, path) {
 
-}
+};
 
 Manager.getServer = function(id) {
-    return (id) ? Manager.servers[id] : null;
+    if (id) {
+        let work = Manager.servers[id];
+        work.running = (Object.keys(Manager.runningServers).includes(id)) ? true : false;
+        return work;
+    } else {
+        return null;
+    }
 };
 
 Manager.listServers = function() {
@@ -161,11 +183,21 @@ Requests.newServer = function(_req, res, data) {
 
     if (resss) {
         res.end(JSON.stringify(resss));
+    } else {
+        r403(res);
     }
 }
 
 Requests.updateServer = function(req, res, data) {
-    let body = JSON.parse(data.toString("utf8"))
+    let body = JSON.parse(data.toString("utf8"));
+    let resss = Manager.updateServer(body);
+
+    if (resss) {
+        res.end(JSON.stringify(resss));
+    } else {
+        r403(res);
+    }
+
 };
 
 
