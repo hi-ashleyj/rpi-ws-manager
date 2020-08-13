@@ -81,11 +81,11 @@ Manager.listFiles = function(id, path) {
 }
 
 Manager.getServer = function(id) {
-    return (id) ? servers[id] : null;
+    return (id) ? Manager.servers[id] : null;
 };
 
 Manager.listServers = function() {
-    return servers;
+    return Manager.servers;
 };
 
 // --- HTTP STUFF --- //
@@ -176,6 +176,7 @@ let requestHandler = async function(req, res) {
     let parseIt = url.parse(req.url, true);
 
     let type = "400";
+    let callback;
 
     if (req.method == "GET" && !parseIt.search) {
         type = "page";
@@ -183,32 +184,28 @@ let requestHandler = async function(req, res) {
     } else if (parseIt.query !== null && typeof parseIt.query == "object" && Object.keys(parseIt.query).length > 0) {
         // This is a server method
         type = "501";
-        callback;
         let method = parseIt.query.method;
 
-        if (req.method == "GET") { 
-            // Get requests only get information
-            if (method == "list") {
-                type = "list";
-                callback = Requests.listServers;
-            } else if (method == "getserver") {
-                type = "getserver";
-                callback = Requests.getServer;
-            }
-        } else if (req.method == "POST") {
-            // This one sends information
+        if (req.method == "POST") {
+            // Always use post for server functions
             if (method == "newserver") {
                 type = "newserver";
                 callback = Requests.newServer;
-            }
+            } else if (method == "getserver") {
+                type = "getserver";
+                callback = Requests.getServer;
+            } else if (method == "list") {
+                type = "list";
+                callback = Requests.listServers;
+            } 
         }
 
         if (type !== "501") {
             let buffer = Buffer.from([]);
             req.on("data", (chunk) => {
-                buffer.concat(buffer, chunk);
+                buffer = Buffer.concat([buffer, chunk]);
             });
-            req.on("end", () => {
+            req.on("end", (e) => {
                 callback(req, res, buffer);
             });
         }

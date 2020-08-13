@@ -4,7 +4,7 @@ Home.servers = {};
 Home.servers.list = async function() {
     return new Promise(async (resolve, reject) => {
         try {
-            let servers = JSON.parse(await getRequest("list", {}));
+            let servers = JSON.parse(await Comms.post("list", {}));
             resolve(servers);
         } catch (err) {
             reject(err);
@@ -15,7 +15,7 @@ Home.servers.list = async function() {
 Home.servers.get = async function(id) {
     return new Promise(async (resolve, reject) => {
         try {
-            let servers = JSON.parse(await getRequest("getserver", {id: id}));
+            let servers = JSON.parse(await Comms.post("getserver", JSON.stringify({id: id})));
             resolve(servers);
         } catch (err) {
             reject(err);

@@ -1,9 +1,10 @@
-let thisconnection = window.location.href;
+let Comms = {};
+Comms.connection = window.location.href;
 
-let getRequest = function(method, body) {
+Comms.get = function(method, body) {
     return new Promise(async (resolve, reject) => {
         let request = new XMLHttpRequest();
-        request.open("GET", thisconnection + "?method=" + method);
+        request.open("GET", Comms.connection + "?method=" + method);
         request.addEventListener("load", () => {
             resolve(request.responseText)
         });
@@ -18,10 +19,10 @@ let getRequest = function(method, body) {
     })
 };
 
-let postRequest = function(method, body) {
+Comms.post = function(method, body) {
     return new Promise((resolve, reject) => {
         let request = new XMLHttpRequest();
-        request.open("POST", thisconnection + "?method=" + method);
+        request.open("POST", Comms.connection + "?method=" + method);
         request.addEventListener("load", () => {
             resolve(request.responseText);
         });
