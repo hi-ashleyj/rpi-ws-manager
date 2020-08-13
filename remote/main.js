@@ -7,7 +7,7 @@ Home.servers.list = async function() {
             let servers = JSON.parse(await Comms.post("list", {}));
             resolve(servers);
         } catch (err) {
-            reject(err);
+            resolve(null);
         }
     });
 };
@@ -18,7 +18,29 @@ Home.servers.get = async function(id) {
             let servers = JSON.parse(await Comms.post("getserver", JSON.stringify({id: id})));
             resolve(servers);
         } catch (err) {
-            reject(err);
+            resolve(null);
+        }
+    });
+};
+
+Home.servers.update = async function(payload) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let servers = JSON.parse(await Comms.post("update", JSON.stringify(payload)));
+            resolve(servers);
+        } catch (err) {
+            resolve(null);
+        }
+    });
+};
+
+Home.servers.new = async function(payload) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let servers = JSON.parse(await Comms.post("new", JSON.stringify(payload)));
+            resolve(servers);
+        } catch (err) {
+            resolve(null);
         }
     });
 };
@@ -26,6 +48,8 @@ Home.servers.get = async function(id) {
 let UI = {};
 UI.editing;
 UI.Presets = {};
+UI.edit = {};
+UI.files = {};
 
 UI.Presets.ButtonToggle = function(button) {
     button.when("click", (e) => {
@@ -68,31 +92,52 @@ UI.Components.serverLine = function(payload) {
 
 
 
+UI.edit.updateInfo = async function () {
+    let id = UI.editing.id;
+    let alias = find("input.editor.alias").value;
+    let port = find("input.editor.port").value;
+    let runonboot = !(!(find("button.toggle.editor.runonboot").getr("data-checked")));
+    let runfile = find("input.editor.runfile").value;
+    let work = {
+        id: id, alias: alias, port: port, runonboot: runonboot, runfile: runfile
+    };
+
+    let banana = await Home.servers.update(work);
+
+    if (banana) {
+        find("div.editor.staging").attr("data-active", true);
+    }
+};
+
 UI.showEdit = async function(id) {
-    let info = await Home.servers.get(id);
-    UI.editing = info;
-
-    find(".editor.id").chng("innerText", info.id);
-    find(".editor.alias:not(input)").chng("innerText", info.alias);
-    find("input.editor.alias").chng("value", info.alias);
-    find("input.editor.port").chng("value", info.port);
-    if (info.runonboot) {
-        find("button.toggle.editor.runonboot").attr("data-checked", true);
-    } else {
-        find("button.toggle.editor.runonboot").rmtr("data-checked", true);
+    try {
+        let info = await Home.servers.get(id);
+        UI.editing = info;
+    
+        find(".editor.id").chng("innerText", info.id);
+        find(".editor.alias:not(input)").chng("innerText", info.alias);
+        find("input.editor.alias").chng("value", info.alias);
+        find("input.editor.port").chng("value", info.port);
+        if (info.runonboot) {
+            find("button.toggle.editor.runonboot").attr("data-checked", true);
+        } else {
+            find("button.toggle.editor.runonboot").rmtr("data-checked", true);
+        }
+        find("input.editor.runfile").chng("value", info.runfile);
+        find("div.editor.staging").rmtr("data-active");
+    
+        if (info.running) {
+            find("button.button.editor.fileman").chng("hidden", true);
+            find("button.button.editor.power").chng("innerText", "Stop");
+        } else {
+            find("button.button.editor.fileman").chng("hidden", false);
+            find("button.button.editor.power").chng("innerText", "Start");
+        }
+    
+        document.body.attr("data-mode", "edit");
+    } catch (err) {
+        console.error(err);
     }
-    find("input.editor.runfile").chng("value", info.runfile);
-    find("div.editor.staging").rmtr("data-active");
-
-    if (info.running) {
-        find("button.button.editor.fileman").chng("hidden", true);
-        find("button.button.editor.power").chng("innerText", "Stop");
-    } else {
-        find("button.button.editor.fileman").chng("hidden", false);
-        find("button.button.editor.power").chng("innerText", "Start");
-    }
-
-    document.body.attr("data-mode", "edit");
 };
 
 UI.showConfig = async function() {
@@ -104,7 +149,7 @@ UI.showConfig = async function() {
         }
         document.body.attr("data-mode", "config");
     } catch (err) {
-        console.log(err);
+        console.err(err);
     }
 };
 
@@ -114,4 +159,4 @@ UI.showConfig();
 
 find("button.button.editor.return").when("click", UI.showConfig);
 
-find("button.button.editor.update").when("click", UI.updateInfo);
+find("button.button.editor.update").when("click", UI.edit.updateInfo);

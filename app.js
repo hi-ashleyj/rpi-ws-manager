@@ -74,7 +74,7 @@ Manager.newServer = async function(payload) {
 
         Manager.servers[id] = config;
 
-        Manager.save();
+        await Manager.save();
         await fs.mkdir(path.resolve(documentsFolder, id));
 
         return config;
@@ -83,10 +83,12 @@ Manager.newServer = async function(payload) {
     }
 };
 
-Manager.updateServer = function(payload) {
-    if (payload && payload.id && Manager.servers[id]) {
-        Object.assign(Manager.servers[id], payload);
-        return Manager.servers[id];
+Manager.updateServer = async function(payload) {
+    if (payload && payload.id && Manager.servers[payload.id]) {
+        Object.assign(Manager.servers[payload.id], payload);
+
+        await Manager.save();
+        return Manager.servers[payload.id];
     } else {
         return null;
     }
@@ -122,43 +124,50 @@ Requests.path = function(req, res) {
     let pathpath = __dirname + "/remote" + parseIt.pathname + needsIndex;
 
     if (fsSync.existsSync(pathpath)) {
-        if (pathed.ext == ".html") {
-            res.setHeader("Content-Type", "text/html");
-        } else if (pathed.ext == ".js") {
-            res.setHeader("Content-Type", "application/js");
-        } else if (pathed.ext == ".css") {
-            res.setHeader("Content-Type", "text/css");
-        } else if (pathed.ext == ".png") {
-            res.setHeader("Content-Type", "image/png");
-        } else if (pathed.ext == ".svg") {
-            res.setHeader("Content-Type", "image/svg+xml");
-        } else if (pathed.ext == ".ttf") {
-            res.setHeader("Content-Type", "application/font");
-        }
-
-        let stream = fsSync.createReadStream(pathpath);
-        stream.on("open", () => {
-            stream.pipe(res);
-        });
-
-        stream.on("error", () => {
+        try {
+            if (pathed.ext == ".html") {
+                res.setHeader("Content-Type", "text/html");
+            } else if (pathed.ext == ".js") {
+                res.setHeader("Content-Type", "application/js");
+            } else if (pathed.ext == ".css") {
+                res.setHeader("Content-Type", "text/css");
+            } else if (pathed.ext == ".png") {
+                res.setHeader("Content-Type", "image/png");
+            } else if (pathed.ext == ".svg") {
+                res.setHeader("Content-Type", "image/svg+xml");
+            } else if (pathed.ext == ".ttf") {
+                res.setHeader("Content-Type", "application/font");
+            }
+    
+            let stream = fsSync.createReadStream(pathpath);
+            stream.on("open", () => {
+                stream.pipe(res);
+            });
+    
+            stream.on("error", () => {
+                res.statusCode = 404;
+                console.log("ERR|UNK: HSRV 404");
+                res.end("Not Found");
+            });
+        } catch {
             res.statusCode = 404;
             console.log("ERR|UNK: HSRV 404");
             res.end("Not Found");
-        });
+        }
+        
         
     } else {
         // Test if this should be a redirect endpoint
         let id;
-        for (var i in servers) {
-            if (parseIt.pathname == ("/" + servers[i].alias)) {
+        for (var i in Manager.servers) {
+            if (parseIt.pathname == ("/" + Manager.servers[i].alias)) {
                 id = i;
                 break;
             }
         }
 
         if (id) { // If it is
-            res.setHeader("Location", "http://" + req.headers.host + ":" + servers[id].port + "/");
+            res.setHeader("Location", "http://" + req.headers.host + ":" + Manager.servers[id].port + "/");
             res.writeHead(301, http.STATUS_CODES[301]);
             res.end();
         } else { // If it isn't
@@ -197,7 +206,6 @@ Requests.updateServer = function(req, res, data) {
     } else {
         r403(res);
     }
-
 };
 
 
@@ -225,14 +233,20 @@ let requestHandler = async function(req, res) {
         if (req.method == "POST") {
             // Always use post for server functions
             if (method == "newserver") {
-                type = "newserver";
+                type = method;
                 callback = Requests.newServer;
             } else if (method == "getserver") {
-                type = "getserver";
+                type = method;
                 callback = Requests.getServer;
             } else if (method == "list") {
-                type = "list";
+                type = method;
                 callback = Requests.listServers;
+            } else if (method == "new") {
+                type = method;
+                callback = Requests.newServer;
+            } else if (method == "update") {
+                type = method;
+                callback = Requests.updateServer;
             } 
         }
 
