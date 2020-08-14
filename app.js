@@ -27,9 +27,7 @@ Manager.servers = {};
  * }
  */
 
-Manager.runningServers = {
-    1212: "boi"
-};
+Manager.runningServers = {};
 
 let documentsFolder = path.resolve(os.homedir(), "rpi-ws-manager");
 
@@ -94,8 +92,30 @@ Manager.updateServer = async function(payload) {
     }
 };
 
-Manager.listFiles = function(id, path) {
-
+Manager.listFiles = async function(id, loc) {
+    try {
+        let sevn = await fs.readdir(path.resolve(documentsFolder, id, ...loc), { encoding: "utf8", withFileTypes: true });
+        let output = { id: id, path: loc, files: []};
+    
+        for (let dirent of sevn) {
+            let work = {};
+            if (dirent.isFile()) {
+                work.type = "file";
+            }
+            if (dirent.isDirectory()) {
+                work.type = "folder";
+            }
+            if (work.type) {
+                work.name = dirent.name;
+                work.path = [].concat(loc, dirent.name);
+                output.files.push(work);
+            }
+        }
+    
+        return output;
+    } catch (err) {
+        console.error(err);
+    }
 };
 
 Manager.getServer = function(id) {
@@ -197,9 +217,9 @@ Requests.newServer = function(_req, res, data) {
     }
 }
 
-Requests.updateServer = function(req, res, data) {
+Requests.updateServer = async function(req, res, data) {
     let body = JSON.parse(data.toString("utf8"));
-    let resss = Manager.updateServer(body);
+    let resss = await Manager.updateServer(body);
 
     if (resss) {
         res.end(JSON.stringify(resss));
@@ -208,7 +228,16 @@ Requests.updateServer = function(req, res, data) {
     }
 };
 
+Requests.listFiles = async function(req, res, data) {
+    let body = JSON.parse(data.toString("utf8"));
+    let resss = await Manager.listFiles(body.id, body.path);
 
+    if (resss) {
+        res.end(JSON.stringify(resss));
+    } else {
+        r403(res);
+    }
+};
 
 
 
@@ -247,6 +276,9 @@ let requestHandler = async function(req, res) {
             } else if (method == "update") {
                 type = method;
                 callback = Requests.updateServer;
+            } else if (method == "listfiles") {
+                type = method;
+                callback = Requests.listFiles;
             } 
         }
 

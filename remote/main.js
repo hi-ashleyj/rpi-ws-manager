@@ -68,10 +68,10 @@ Home.files.upload = async function(id, path, dataBase64) {
     });
 };
 
-Home.files.delete = async function(id, path) {
+Home.files.delete = async function(id, path, isFolder) {
     return new Promise(async (resolve, reject) => {
         try {
-            let obj = JSON.parse(await Comms.post("deletefile", JSON.stringify({id: id, path: path})));
+            let obj = JSON.parse(await Comms.post("deletefile", JSON.stringify({id: id, path: path, folder: isFolder})));
             resolve(obj.files);
         } catch (err) {
             resolve(null);
