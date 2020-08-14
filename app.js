@@ -114,7 +114,21 @@ Manager.listFiles = async function(id, loc) {
     
         return output;
     } catch (err) {
-        console.error(err);
+        return null;
+    }
+};
+
+Manager.storeFile = async function(id, loc, dataBase64) {
+    try {
+        if (dataBase64 == "folder") {
+            await fs.mkdir(path.resolve(documentsFolder, id, ...loc));
+        } else {
+            await fs.writeFile(path.resolve(documentsFolder, id, ...loc), dataBase64, "base64");
+        }
+
+        return await Manager.listFiles(id, loc.slice(0, -1));
+    } catch (err) {
+        return null;
     }
 };
 
@@ -239,8 +253,16 @@ Requests.listFiles = async function(req, res, data) {
     }
 };
 
+Requests.uploadFile = async function(req, res, data) {
+    let body = JSON.parse(data.toString("utf8"));
+    let resss = await Manager.storeFile(body.id, body.path, body.dataBase64);
 
-
+    if (resss) {
+        res.end(JSON.stringify(resss));
+    } else {
+        r403(res);
+    }
+};
 
 
 
@@ -279,6 +301,9 @@ let requestHandler = async function(req, res) {
             } else if (method == "listfiles") {
                 type = method;
                 callback = Requests.listFiles;
+            } else if (method == "uploadfile") {
+                type = method;
+                callback = Requests.uploadFile;
             } 
         }
 
