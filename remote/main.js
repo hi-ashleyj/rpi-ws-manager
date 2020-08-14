@@ -1,5 +1,6 @@
 let Home = {};
 Home.servers = {};
+Home.files = {};
 
 Home.servers.list = async function() {
     return new Promise(async (resolve, reject) => {
@@ -39,6 +40,39 @@ Home.servers.new = async function(payload) {
         try {
             let servers = JSON.parse(await Comms.post("new", JSON.stringify(payload)));
             resolve(servers);
+        } catch (err) {
+            resolve(null);
+        }
+    });
+};
+
+Home.files.list = async function(id, path) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let obj = JSON.parse(await Comms.post("listfiles", JSON.stringify({id: id, path: path})));
+            resolve(obj.files);
+        } catch (err) {
+            resolve(null);
+        }
+    });
+};
+
+Home.files.upload = async function(id, path, dataBase64) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let obj = JSON.parse(await Comms.post("uploadfile", JSON.stringify({id: id, path: path, dataBase64: dataBase64})));
+            resolve(obj.files);
+        } catch (err) {
+            resolve(null);
+        }
+    });
+};
+
+Home.files.delete = async function(id, path) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let obj = JSON.parse(await Comms.post("deletefile", JSON.stringify({id: id, path: path})));
+            resolve(obj.files);
         } catch (err) {
             resolve(null);
         }
@@ -93,21 +127,47 @@ UI.Components.serverLine = function(payload) {
 
 
 UI.edit.updateInfo = async function () {
-    let id = UI.editing.id;
-    let alias = find("input.editor.alias").value;
-    let port = find("input.editor.port").value;
-    let runonboot = !(!(find("button.toggle.editor.runonboot").getr("data-checked")));
-    let runfile = find("input.editor.runfile").value;
-    let work = {
-        id: id, alias: alias, port: port, runonboot: runonboot, runfile: runfile
-    };
+    try {
+        let id = UI.editing.id;
+        let alias = find("input.editor.alias").value;
+        let port = parseInt(find("input.editor.port").value);
+        let runonboot = !(!(find("button.toggle.editor.runonboot").getr("data-checked")));
+        let runfile = find("input.editor.runfile").value;
+        let work = {
+            id: id, alias: alias, port: port, runonboot: runonboot, runfile: runfile
+        };
 
-    let banana = await Home.servers.update(work);
+        let sevn = await Home.servers.update(work);
 
-    if (banana) {
-        find("div.editor.staging").attr("data-active", true);
-    }
+        if (sevn) {
+            find("div.editor.staging").attr("data-active", true);
+        }
+    } catch (err) { console.log(err); }
 };
+
+UI.edit.createServer = async function() {
+    try {
+        let id = find("input.create.server-line.alias").value;
+        let alias = find("input.create.server-line.alias").value;
+        let port = parseInt(find("input.create.server-line.port").value);
+        let runonboot = !(!(find("button.toggle.create.server-line.runonboot").getr("data-checked")));
+        let runfile = find("input.create.server-line.runfile").value;
+        let work = {
+            id: id, alias: alias, port: port, runonboot: runonboot, runfile: runfile
+        };
+
+        let sevn = await Home.servers.new(work);
+
+        find("input.create.server-line.alias").value = "";
+        find("input.create.server-line.alias").value = "";
+        find("input.create.server-line.port").value = "";
+        find("button.toggle.create.server-line.runonboot").attr("data-checked", true);
+        find("input.create.server-line.runfile").value = "";
+    } catch (err) { console.log(err); }
+};
+
+
+
 
 UI.showEdit = async function(id) {
     try {
