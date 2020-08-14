@@ -132,9 +132,27 @@ Manager.storeFile = async function(id, loc, dataBase64) {
     }
 };
 
+Manager.removeFile = async function(id, loc) {
+    try {
+        let stat = await fs.stat(path.resolve(documentsFolder, id, ...loc));
+        if (stat.isDirectory()) {
+            await fs.rmdir(path.resolve(documentsFolder, id, ...loc), {recursive: true});
+        } else if (stat.isFile()) {
+            await fs.unlink(path.resolve(documentsFolder, id, ...loc));
+        } else {
+            throw "ERR|RMF: Fuck.";
+        }
+
+        return await Manager.listFiles(id, loc.slice(0, -1));
+    } catch (err) {
+        return null;
+    }
+    
+};
+
 Manager.getServer = function(id) {
     if (id) {
-        let work = Manager.servers[id];
+        let work = Object.assign({}, Manager.servers[id]);
         work.running = (Object.keys(Manager.runningServers).includes(id)) ? true : false;
         return work;
     } else {
@@ -264,6 +282,16 @@ Requests.uploadFile = async function(req, res, data) {
     }
 };
 
+Requests.deleteFile = async function(req, res, data) {
+    let body = JSON.parse(data.toString("utf8"));
+    let resss = await Manager.removeFile(body.id, body.path);
+
+    if (resss) {
+        res.end(JSON.stringify(resss));
+    } else {
+        r403(res);
+    }
+};
 
 
 
@@ -302,6 +330,9 @@ let requestHandler = async function(req, res) {
                 type = method;
                 callback = Requests.listFiles;
             } else if (method == "uploadfile") {
+                type = method;
+                callback = Requests.uploadFile;
+            } else if (method == "deletefile") {
                 type = method;
                 callback = Requests.uploadFile;
             } 

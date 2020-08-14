@@ -68,10 +68,10 @@ Home.files.upload = async function(id, path, dataBase64) {
     });
 };
 
-Home.files.delete = async function(id, path, isFolder) {
+Home.files.delete = async function(id, path) {
     return new Promise(async (resolve, reject) => {
         try {
-            let obj = JSON.parse(await Comms.post("deletefile", JSON.stringify({id: id, path: path, folder: isFolder})));
+            let obj = JSON.parse(await Comms.post("deletefile", JSON.stringify({id: id, path: path})));
             resolve(obj.files);
         } catch (err) {
             resolve(null);
@@ -122,6 +122,22 @@ UI.Components.serverLine = function(payload) {
     root.append(idEL, aliasEL, portEL, runonbootEL, runfileEL, editEL);
 
     find("div.configcanvas").append(root);
+};
+
+UI.Components.file = function(name, loc, folder) {
+    let root = document.createElement("div").attr("data-name", name).chng("className", "file-line cont");
+    if (folder) {
+        root.attr("data-folder", true);
+    }
+
+    
+
+
+
+};
+
+UI.Components.folder = function(name, loc) {
+    UI.Components.file(name, loc, true);
 };
 
 
