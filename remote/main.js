@@ -84,6 +84,7 @@ UI.editing;
 UI.Presets = {};
 UI.edit = {};
 UI.files = {};
+UI.fileicons = ["html", "js", "css", "jpg", "png", "svg", "ttf", "woff", "woff2", "json", "txt"];
 
 UI.Presets.ButtonToggle = function(button) {
     button.when("click", (e) => {
@@ -130,10 +131,16 @@ UI.Components.file = function(name, loc, folder) {
         root.attr("data-folder", true);
     }
 
+    let ext = name.slice((name.lastIndexOf(".") > 0 ? name.lastIndexOf(".") : 0));
+    let icon = "png/" + ext + ".png";
+
+    if (!UI.fileicons.includes(ext)) {
+        icon = "png/unknown.png";
+    } else if (folder) {
+        icon = "png/folder.png";
+    }
+
     
-
-
-
 };
 
 UI.Components.folder = function(name, loc) {
