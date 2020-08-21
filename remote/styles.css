@@ -143,3 +143,31 @@ div.editor.staging {
 div.editor.staging[data-active] {
     display: block;
 }
+
+
+
+div.file-line.cont {
+    display: grid;
+    grid-template-columns: 2em 1fr 2em;
+    align-items: center;
+    gap: 0.75em;
+    padding: 1em;
+    border: 1px solid #333333;
+    border-radius: 1em;
+    background: #222222;
+    margin-bottom: 0.5em;
+}
+
+img.file-line.img {
+    height: 2em;
+    object-fit: contain;
+}
+
+div.file-line.delete {
+    height: 2em;
+    width: 2em;
+    background: url(svg/delete.svg);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+}

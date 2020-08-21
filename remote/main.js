@@ -80,11 +80,24 @@ Home.files.delete = async function(id, path) {
 };
 
 let UI = {};
+UI.events = [];
 UI.editing;
 UI.Presets = {};
 UI.edit = {};
 UI.files = {};
-UI.fileicons = ["html", "js", "css", "jpg", "png", "svg", "ttf", "woff", "woff2", "json", "txt"];
+UI.fileicons = ["folder","html", "js", "css", "jpg", "png", "svg", "ttf", "woff", "woff2", "json", "txt"];
+
+UI.on = function(type, call) {
+    UI.events.push({type, call});
+};
+
+UI.fire = function(type, data) {
+    for (var obj of UI.events) {
+        if (obj.type == type) {
+            obj.call((data) ? data : null);
+        }
+    }
+}
 
 UI.Presets.ButtonToggle = function(button) {
     button.when("click", (e) => {
@@ -131,23 +144,56 @@ UI.Components.file = function(name, loc, folder) {
         root.attr("data-folder", true);
     }
 
-    let ext = name.slice((name.lastIndexOf(".") > 0 ? name.lastIndexOf(".") : 0));
-    let icon = "png/" + ext + ".png";
+    let icon = "png/unknown.png"
 
-    if (!UI.fileicons.includes(ext)) {
-        icon = "png/unknown.png";
-    } else if (folder) {
+    if (name.lastIndexOf(".") >= 0) {
+        let ext = name.slice(name.lastIndexOf(".") + 1);
+        if (UI.fileicons.includes(ext)) {
+            icon = "png/" + ext + ".png";
+        }
+    }
+    if (folder) {
         icon = "png/folder.png";
     }
 
-    
+    let iconEL = document.createElement("img").chng("className", "file-line img").chng("src", icon);
+    let fileEL = document.createElement("div").chng("className", "file-line name").chng("innerText", name);
+    let deleteEL = document.createElement("div").chng("className", "file-line delete").attr("data-loc", JSON.stringify(loc));
+
+    root.append(iconEL, fileEL, deleteEL);
+
+    find("div.files-canvas").append(root);
 };
 
 UI.Components.folder = function(name, loc) {
     UI.Components.file(name, loc, true);
 };
 
+UI.files.load = function(results) {
+    find("div.files-canvas").chng("innerHTML", "");
 
+    for (var i = 0; i < results.length; i++) {
+        if (results[i].type == "folder") {
+            UI.Components.folder(results[i].name, results[i].path);
+        }
+    }
+
+    for (var i = 0; i < results.length; i++) {
+        if (results[i].type == "file") {
+            UI.Components.file(results[i].name, results[i].path);
+        }
+    }
+}
+
+UI.on("update", UI.files.load);
+
+UI.files.show = async function(loc) {
+    document.body.attr("data-mode", "files");
+
+    UI.files.load(await Home.files.list(UI.editing.id, loc));
+};
+
+find("button.button.editor.fileman").when("click", () => { UI.files.show([]) });
 
 UI.edit.updateInfo = async function () {
     try {
