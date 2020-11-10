@@ -12,7 +12,7 @@ let r403 = function(res) {
     res.end();
 };
 
-let networkingPort = 80;
+let networkingPort = 8080;
 
 let Manager = {};
 Manager.servers = {};
@@ -70,10 +70,10 @@ Manager.newServer = async function(payload) {
             runfile: (payload.runfile) ? payload.runfile : "app.js"
         }
 
-        Manager.servers[id] = config;
+        Manager.servers[config.id] = config;
 
         await Manager.save();
-        await fs.mkdir(path.resolve(documentsFolder, id));
+        await fs.mkdir(path.resolve(documentsFolder, config.id));
 
         return config;
     } else {
@@ -366,4 +366,4 @@ let serverboi = http.createServer(requestHandler);
 
 serverboi.listen({
     port: networkingPort
-}, () => {console.log("Listening on port " + networkingPort)});
+}, () => {console.log("Listening on port " + networkingPort + " (http://localhost" + ((networkingPort == 80) ? "" : ":" + networkingPort) + ")")});
