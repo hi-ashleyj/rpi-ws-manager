@@ -171,3 +171,9 @@ div.file-line.delete {
     background-repeat: no-repeat;
     background-size: contain;
 }
+
+div.uploads-cont {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}

@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/hi-ashleyj/rpi-ws-manager/issues"
   },
-  "homepage": "https://github.com/hi-ashleyj/rpi-ws-manager#readme"
+  "homepage": "https://github.com/hi-ashleyj/rpi-ws-manager#readme",
+  "dependencies": {
+    "ws": "^7.4.0"
+  }
 }

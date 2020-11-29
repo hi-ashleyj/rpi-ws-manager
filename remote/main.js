@@ -46,6 +46,39 @@ Home.servers.new = async function(payload) {
     });
 };
 
+Home.servers.start = async function(id) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            await Comms.post("start", JSON.stringify({ id: id }));
+            resolve(true);
+        } catch (err) {
+            resolve(false);
+        }
+    });
+};
+
+Home.servers.stop = async function(id) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            await Comms.post("stop", JSON.stringify({ id: id }));
+            resolve(true);
+        } catch (err) {
+            resolve(false);
+        }
+    });
+};
+
+Home.servers.restart = async function(id) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            await Comms.post("restart", JSON.stringify({ id: id }));
+            resolve(true);
+        } catch (err) {
+            resolve(false);
+        }
+    });
+};
+
 Home.files.list = async function(id, path) {
     return new Promise(async (resolve, reject) => {
         try {
@@ -230,6 +263,18 @@ UI.files.load = function(results) {
             UI.Components.file(results[i].name, results[i].path);
         }
     }
+
+    let absoluteSTR = "";
+
+    if (results[0] && results[0].path && results[0].path.length > 0) {
+        let absoluteARR = JSON.parse(JSON.stringify(results[0].path));
+        absoluteARR.pop()
+        absoluteSTR = absoluteARR.join(" > ");
+    }
+    
+    find("span.files-trace.content").chng("innerText", absoluteSTR);
+
+    console.log(results);
 }
 
 UI.on("update", UI.files.load);
@@ -293,3 +338,5 @@ find("button.button.create.server-line.create").when("click", UI.edit.createServ
 find("button.button.editor.return").when("click", UI.showConfig);
 
 find("button.button.editor.update").when("click", UI.edit.updateInfo);
+
+find("button.button.action.files.return").when("click", () => { UI.showEdit(UI.editing.id); });

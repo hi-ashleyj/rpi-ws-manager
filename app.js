@@ -12,10 +12,12 @@ let r403 = function(res) {
     res.end();
 };
 
-let networkingPort = 8080;
+let networkingPort = 80;
 
 let Manager = {};
 Manager.servers = {};
+Manager.autoStartOnce = false;
+Manager.autoStart;
 
 /**
  * servers: {
@@ -28,6 +30,55 @@ Manager.servers = {};
  */
 
 Manager.runningServers = {};
+
+let SpawnedServer = function(id, process) {
+    this.id = id;
+    this.log = [];
+    this.running = true;
+    this.process = process;
+    this.events = [];
+
+    this.on = function(type, call) {
+        this.events.push({ type, call });
+    }
+
+    this.fire = function(type, data) {
+        for (e of this.events) {
+            if (e.type == type) {
+                e.call(data);
+            }
+        }
+    };
+
+    let u = this;
+
+    this.process.stdout.on("data", (chunk) => {
+        u.log.push(chunk.toString());
+        console.log(u.id + "-IO1|" + chunk.toString());
+        while (u.log.length > 100) {
+            u.log.shift();
+        }
+    });
+
+    this.process.on("exit", (code, signal) => {
+        if (typeof code == "number") {
+            // Exited itself
+            u.log.push("Exited by itself" + ((code == 0) ? "" : " (code " + code + "). Error Information may be available above."));
+            u.fire("exit", code);
+        } else if (typeof signal == "string") {
+            u.log.push("Terminated by signal: " + signal);
+            u.fire("stop", (typeof signal == "string"));
+        }
+
+        u.running = false;
+    });
+
+    this.stop = function() {
+        u.process.kill();
+    };
+
+    return this;
+};
 
 let documentsFolder = path.resolve(os.homedir(), "rpi-ws-manager");
 
@@ -42,6 +93,9 @@ if (!fsSync.existsSync(documentsFolder)) { // Create folders and default users
 } else {
     fs.readFile(path.resolve(documentsFolder, "servers.json"), {encoding: "utf8"}).then((data) => {
         Manager.servers = JSON.parse(data);
+        if (typeof Manager.autoStart == "function") {
+            Manager.autoStart();
+        }
     });
 }
 
@@ -52,10 +106,55 @@ Manager.save = async function() {
         
     }
     
+}; 
+
+Manager.stopServer = function(id) {
+    return new Promise(async (resolve, _reject) => {
+        if (Manager.runningServers[id]) {
+            if (Manager.runningServers[id].running) {
+                Manager.runningServers[id].on("stop", (_stopped) => {
+                    resolve();
+                });
+
+                Manager.runningServers[id].stop();
+            } else {
+                resolve();
+            }
+        } else {
+            resolve();
+        }
+    })
 };
 
 Manager.spawnServer = function(id) {
-    
+    if (Manager.servers[id].runfile.length == 0) {
+        return;
+    }
+    let options = {};
+    let args = [];
+
+    args.push(Manager.servers[id].runfile);
+    args.push("port:" + Manager.servers[id].port);
+
+    options.cwd = path.resolve(documentsFolder, "" + id);
+
+    let process = child_process.spawn("node", args, options);
+
+    Manager.runningServers[id] = new SpawnedServer(id, process);
+};
+
+Manager.autoStart = function() {
+    if (Manager.autoStartOnce) {
+        return;
+    } else {
+        Manager.autoStartOnce = true;
+
+        for (let id in Manager.servers) {
+            if (Manager.servers[id].runatboot) {
+                Manager.spawnServer(id);
+            }
+        }
+    }
 };
 
 Manager.newServer = async function(payload) {
@@ -153,7 +252,7 @@ Manager.removeFile = async function(id, loc) {
 Manager.getServer = function(id) {
     if (id) {
         let work = Object.assign({}, Manager.servers[id]);
-        work.running = (Object.keys(Manager.runningServers).includes(id)) ? true : false;
+        work.running = (Object.keys(Manager.runningServers).includes(id) && Manager.runningServers[id].running);
         return work;
     } else {
         return null;
@@ -228,6 +327,47 @@ Requests.path = function(req, res) {
         }
     }
 };
+
+Requests.startServer = function(_req, res, data) {
+    let body = JSON.parse(data.toString("utf8"));
+    if (body.id) {
+        Manager.spawnServer(body.id);
+        res.writeHead(200, http.STATUS_CODES[200]); 
+        res.end();
+    } else {
+        res.writeHead(404, http.STATUS_CODES[404]);
+        res.end();
+    }
+};
+
+Requests.stopServer = function(_req, res, data) {
+    let body = JSON.parse(data.toString("utf8"));
+    if (body.id) {
+        Manager.stopServer(body.id).then(() => { 
+            res.writeHead(200, http.STATUS_CODES[200]); 
+            res.end(); 
+        });
+    } else {
+        res.writeHead(404, http.STATUS_CODES[404]);
+        res.end();
+    }
+};
+
+Requests.restartServer = function(_req, res, data) {
+    let body = JSON.parse(data.toString("utf8"));
+    if (body.id) {
+        Manager.stopServer(body.id).then(() => { 
+            Manager.spawnServer(body.id);
+            res.writeHead(200, http.STATUS_CODES[200]); 
+            res.end(); 
+        });
+    } else {
+        res.writeHead(404, http.STATUS_CODES[404]);
+        res.end();
+    }
+};
+
+
 
 Requests.listServers = function(_req, res, _data) {
     res.end(JSON.stringify(Manager.listServers()));
@@ -335,6 +475,15 @@ let requestHandler = async function(req, res) {
             } else if (method == "deletefile") {
                 type = method;
                 callback = Requests.uploadFile;
+            } else if (method == "start") {
+                type = method;
+                callback = Requests.startServer;
+            } else if (method == "stop") {
+                type = method;
+                callback = Requests.stopServer;
+            } else if (method == "restart") {
+                type = method;
+                callback = Requests.restartServer;
             } 
         }
 
@@ -367,3 +516,7 @@ let serverboi = http.createServer(requestHandler);
 serverboi.listen({
     port: networkingPort
 }, () => {console.log("Listening on port " + networkingPort + " (http://localhost" + ((networkingPort == 80) ? "" : ":" + networkingPort) + ")")});
+
+if (Object.keys(Manager.servers).length > 0) {
+    Manager.autoStart();
+}
