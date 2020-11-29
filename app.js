@@ -319,7 +319,7 @@ Requests.path = function(req, res) {
 
         if (id) { // If it is
             res.setHeader("Location", "http://" + req.headers.host + ":" + Manager.servers[id].port + "/");
-            res.writeHead(301, http.STATUS_CODES[301]);
+            res.writeHead(307, http.STATUS_CODES[307]);
             res.end();
         } else { // If it isn't
             res.writeHead(404, http.STATUS_CODES[404]);
