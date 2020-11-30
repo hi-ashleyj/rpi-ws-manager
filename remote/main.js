@@ -164,6 +164,9 @@ UI.Components.serverLine = function(payload) {
     if (payload.runonboot) {
         runonbootEL.attr("data-checked", true);
     }
+    if (payload.running) {
+        root.attr("data-running", true)
+    }
     editEL.when("click", () => {UI.showEdit(payload.id)});
 
     root.append(idEL, aliasEL, portEL, runonbootEL, runfileEL, editEL);
@@ -221,11 +224,9 @@ UI.showEdit = async function(id) {
         find("div.editor.staging").rmtr("data-active");
     
         if (info.running) {
-            find("button.button.editor.fileman").chng("hidden", true);
-            find("button.button.editor.power").chng("innerText", "Stop");
+            find("div.edit").attr("data-running", true);
         } else {
-            find("button.button.editor.fileman").chng("hidden", false);
-            find("button.button.editor.power").chng("innerText", "Start");
+            find("div.edit").rmtr("data-running");
         }
     
         document.body.attr("data-mode", "edit");
@@ -340,3 +341,7 @@ find("button.button.editor.return").when("click", UI.showConfig);
 find("button.button.editor.update").when("click", UI.edit.updateInfo);
 
 find("button.button.action.files.return").when("click", () => { UI.showEdit(UI.editing.id); });
+
+find("button.button.editor.start").when("click", () => { Home.servers.start(UI.editing.id) });
+find("button.button.editor.stop").when("click", () => { Home.servers.stop(UI.editing.id) });
+find("button.button.editor.restart").when("click", () => { Home.servers.restart(UI.editing.id) });

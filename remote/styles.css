@@ -112,7 +112,7 @@ div.server-line.cont {
     margin-top: 1rem;
     margin-bottom: 1rem;
     border-radius: 1rem;
-    background: #222222;
+    background-image: linear-gradient(135deg, black, rgb(55, 6, 35));
     border: 1px solid #333333;
 
     display: grid;
@@ -122,8 +122,24 @@ div.server-line.cont {
     gap: 1rem;
 }
 
-div.server-line.cont:not([data-id]) {
+div.server-line.cont:not([data-id]):not(.editor) {
     background: #333333;
+}
+
+div.server-line.cont[data-running] {
+    background-image: linear-gradient(135deg, #1e0033, #db188a);
+}
+
+div.edit[data-running] div.editor.server-line.cont {
+    background-image: linear-gradient(135deg, #1e0033, #db188a);
+}
+
+div.edit[data-running] button.button.editor.nur {
+    display: none;
+}
+
+div.edit:not([data-running]) button.button.editor.run {
+    display: none;
 }
 
 

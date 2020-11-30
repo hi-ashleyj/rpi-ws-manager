@@ -54,7 +54,7 @@ let SpawnedServer = function(id, process) {
 
     this.process.stdout.on("data", (chunk) => {
         u.log.push(chunk.toString());
-        console.log(u.id + "-IO1|" + chunk.toString());
+        // console.log(u.id + "-IO1|" + chunk.toString());
         while (u.log.length > 100) {
             u.log.shift();
         }
@@ -145,14 +145,19 @@ Manager.spawnServer = function(id) {
 
 Manager.autoStart = function() {
     if (Manager.autoStartOnce) {
+        console.log("Autostart stopped");
         return;
     } else {
+        console.log("Autostarting " + Object.keys(Manager.servers).length + " server" + ((Object.keys(Manager.servers).length !== 1) ? "s" : ""));
         Manager.autoStartOnce = true;
 
         for (let id in Manager.servers) {
-            if (Manager.servers[id].runatboot) {
+            if (Manager.servers[id].runonboot) {
                 Manager.spawnServer(id);
-            }
+                console.log("Starting server " + id);
+            } else {
+                console.log("Didn't start server " + id);
+            } 
         }
     }
 };
@@ -260,7 +265,11 @@ Manager.getServer = function(id) {
 };
 
 Manager.listServers = function() {
-    return Manager.servers;
+    let work = JSON.parse(JSON.stringify(Manager.servers));
+    for (let id in work) {
+        work[id].running = (Object.keys(Manager.runningServers).includes(id) && Manager.runningServers[id].running);
+    }
+    return work;
 };
 
 // --- HTTP STUFF --- //
