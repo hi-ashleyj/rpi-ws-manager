@@ -5,6 +5,7 @@ let path = require("path");
 let url = require("url");
 let http = require("http");
 let child_process = require("child_process");
+let ws = require("ws");
 const { parse } = require("path");
 
 let r403 = function(res) {
@@ -13,11 +14,28 @@ let r403 = function(res) {
 };
 
 let networkingPort = 80;
+let remoteServer;
+
+let remoteSend = async function(cl, type, data) {
+    let msg = JSON.stringify({ type, data });
+    if (cl) {
+        cl.send(msg);
+    } else {
+        remoteServer.clients.forEach(function each(client) {
+            if (client.readyState === ws.OPEN) {
+                client.send(msg);
+            }
+        });
+    }
+};
 
 let Manager = {};
 Manager.servers = {};
 Manager.autoStartOnce = false;
 Manager.autoStart;
+Manager.broadcast;
+Manager.listServers;
+Manager.getServer;
 
 /**
  * servers: {
@@ -71,6 +89,7 @@ let SpawnedServer = function(id, process) {
         }
 
         u.running = false;
+        Manager.broadcast("stop", id);
     });
 
     this.stop = function() {
@@ -108,6 +127,16 @@ Manager.save = async function() {
     
 }; 
 
+Manager.broadcast = function(type, id) {
+    let output = { servers: Manager.listServers() };
+
+    if (type == "start" || type == "stop") {
+        output.target ==  Manager.getServer(id);
+    }
+
+    remoteSend(null, type, output);
+};
+
 Manager.stopServer = function(id) {
     return new Promise(async (resolve, _reject) => {
         if (Manager.runningServers[id]) {
@@ -141,6 +170,7 @@ Manager.spawnServer = function(id) {
     let process = child_process.spawn("node", args, options);
 
     Manager.runningServers[id] = new SpawnedServer(id, process);
+    Manager.broadcast("start", id);
 };
 
 Manager.autoStart = function() {
@@ -521,6 +551,23 @@ let requestHandler = async function(req, res) {
 };
 
 let serverboi = http.createServer(requestHandler);
+
+let handleWSRequest = async function(cl, msg) {
+    let { type, data } = msg;
+
+    if (type == "hello") {
+        console.log("Gained WS connection");
+        remoteSend(cl, "hello", "hi");
+    }
+};
+
+remoteServer = new ws.Server({server: serverboi});
+
+remoteServer.on('connection', function (cl) {
+    cl.on('message', function (msg) {
+        handleWSRequest(cl, JSON.parse(msg));
+    });
+});
 
 serverboi.listen({
     port: networkingPort

@@ -37,3 +37,32 @@ Comms.post = function(method, body) {
     });
 };
 
+wsc = new WebSocket("ws" + ((Comms.connection.slice(0, 5) == "https") ? Comms.connection.slice(5) : (Comms.connection.slice(0, 4) == "http") ? Comms.connection.slice(4) : Comms.connection));
+
+let Socket = {};
+Socket.events = [];
+Socket.on = function(type, call) {
+    Socket.events.push({type: type, call: call});
+};
+
+wsc.addEventListener('open', function(_e) {
+    Socket.send("hello", "hi");
+});
+
+Socket.fire = function(type, msg) {
+    for (var i in Socket.events) {
+        if (Socket.events[i].type == type) {
+            Socket.events[i].call((msg) ? msg : "");
+        }
+    }
+};
+
+// Listen for messages
+wsc.addEventListener('message', function (event) {
+    let res = JSON.parse(event.data);
+    Socket.fire(res.type, res.data);
+});
+
+Socket.send = function(type, data) {
+    wsc.send(JSON.stringify({ type, data }));
+};
