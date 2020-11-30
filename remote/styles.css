@@ -78,7 +78,7 @@ input[type="text"]:focus {
 
 
 
-div.config, div.files, div.edit {
+div.config, div.files, div.edit, div.logs {
     width: 90vw;
     min-width: 400px;
     max-width: 1000px;
@@ -107,6 +107,10 @@ body[data-mode="files"] div.files {
     display: block;
 }
 
+body[data-mode="logs"] div.logs {
+    display: block;
+}
+
 div.server-line.cont {
     padding: 1rem;
     margin-top: 1rem;
@@ -128,6 +132,17 @@ div.server-line.cont:not([data-id]):not(.editor) {
 
 div.server-line.cont[data-running] {
     background-image: linear-gradient(135deg, #1e0033, #db188a);
+}
+
+div.server-line.cont a.server-line.alias {
+    pointer-events: none;
+    color: white;
+    text-decoration: none;
+}
+
+div.server-line.cont[data-running] a.server-line.alias {
+    pointer-events: all;
+    text-decoration: underline;
 }
 
 div.edit[data-running] div.editor.server-line.cont {
@@ -201,4 +216,35 @@ div.uploads-cont {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
+}
+
+div.logs-canvas {
+    background:black;
+    min-height: 50vh;
+    max-height: 80vh;
+    background: black;
+    padding: 1rem;
+    border-radius: 4px;
+    font-family: 'Inconsolata', monospace;
+}
+
+div.logs-line.rooter {
+    font-family: 'Inconsolata', monospace;
+    color: white;
+}
+
+div.logs-line.rooter.info::before {
+    content: "LOG";
+    margin-right: 2.5ex;
+    color: #db188a;
+}
+
+div.logs-line.rooter.error {
+    color: #aa4444;
+}
+
+div.logs-line.rooter.error::before {
+    content: "ERR";
+    padding: 2.5en;
+    color: white;
 }

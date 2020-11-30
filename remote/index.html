@@ -22,7 +22,6 @@
             <div class="configcanvas"></div>
         </div>
         <div class="edit">
-            <br />
             <div style="font-size: 2rem;">
                 <a target="_blank" rel="nofollow" class="editor telegraph alias"></a>&nbsp;<span class="editor telegraph id subtitle"></span>
             </div>
@@ -42,7 +41,7 @@
                     <button class="button editor nur start">Start</button>
                     <button class="button editor run stop">Stop</button>
                     <button class="button editor nur fileman">Manage Files</button>
-                    <button class="button editor run reboot">Restart</button>
+                    <button class="button editor run restart">Restart</button>
                     <button class="button editor nur console">Console</button>
                     <button class="button editor run logs">View Logs</button>
                     <button class="button editor nur delete" style="background-color: #990000;">Delete</button>
@@ -72,6 +71,17 @@
             <br />
             <div class="files-canvas">
                 
+            </div>
+        </div>
+        <div class="logs">
+            <div class="files-header" style="font-size: 2rem;">
+                <span class="editor telegraph alias"></span>&nbsp;<span class="editor telegraph id subtitle"></span>
+            </div><br />
+            <button class="button action logger return">&lt;&nbsp;Return</button><br />
+            <br />
+            <div class="logs-canvas"></div>
+            <div class="logs-runner" hidden>
+                Execute: <input type="text" class="logger runtime console" />
             </div>
         </div>
         <script src="NotQuery.js"></script>

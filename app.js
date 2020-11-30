@@ -71,8 +71,20 @@ let SpawnedServer = function(id, process) {
     let u = this;
 
     this.process.stdout.on("data", (chunk) => {
-        u.log.push(chunk.toString());
-        // console.log(u.id + "-IO1|" + chunk.toString());
+        let entry = { type: "log", data: chunk.toString() };
+        u.log.push(entry);
+        Manager.broadcast("log", u.id, entry);
+
+        while (u.log.length > 100) {
+            u.log.shift();
+        }
+    });
+
+    this.process.stderr.on("data", (chunk) => {
+        let entry = { type: "err", data: chunk.toString() };
+        u.log.push(entry);
+        Manager.broadcast("log", u.id, entry);
+
         while (u.log.length > 100) {
             u.log.shift();
         }
@@ -132,6 +144,9 @@ Manager.broadcast = function(type, ...data) {
 
     if (type == "start" || type == "stop") {
         output.target = data[0];
+    } else if (type == "log") {
+        output.target = data[0];
+        output.message = data[1];
     }
 
     remoteSend(null, type, output);
@@ -302,6 +317,13 @@ Manager.listServers = function() {
     return work;
 };
 
+Manager.getLogfile = function(id) {
+    if (Manager.runningServers[id]) {
+        return Manager.runningServers[id].log;
+    }
+    return [];
+};
+
 // --- HTTP STUFF --- //
 
 let Requests = {};
@@ -396,9 +418,11 @@ Requests.restartServer = function(_req, res, data) {
     let body = JSON.parse(data.toString("utf8"));
     if (body.id) {
         Manager.stopServer(body.id).then(() => { 
-            Manager.spawnServer(body.id);
-            res.writeHead(200, http.STATUS_CODES[200]); 
-            res.end(); 
+            setTimeout(() => {
+                Manager.spawnServer(body.id);
+                res.writeHead(200, http.STATUS_CODES[200]); 
+                res.end(); 
+            }, 750);
         });
     } else {
         res.writeHead(404, http.STATUS_CODES[404]);
@@ -406,7 +430,18 @@ Requests.restartServer = function(_req, res, data) {
     }
 };
 
-
+Requests.getLogs = function(_req, res, data) {
+    let body = JSON.parse(data.toString("utf8"));
+    if (body.id) {
+        let logs = Manager.getLogfile(body.id);
+        
+        res.writeHead(200, http.STATUS_CODES[200]); 
+        res.end(JSON.stringify(logs)); 
+    } else {
+        res.writeHead(404, http.STATUS_CODES[404]);
+        res.end();
+    }
+}
 
 Requests.listServers = function(_req, res, _data) {
     res.end(JSON.stringify(Manager.listServers()));
@@ -523,6 +558,9 @@ let requestHandler = async function(req, res) {
             } else if (method == "restart") {
                 type = method;
                 callback = Requests.restartServer;
+            } else if (method == "serverlog") {
+                type = method;
+                callback = Requests.getLogs;
             } 
         }
 
@@ -556,7 +594,6 @@ let handleWSRequest = async function(cl, msg) {
     let { type, data } = msg;
 
     if (type == "hello") {
-        console.log("Gained WS connection");
         remoteSend(cl, "hello", "hi");
     }
 };

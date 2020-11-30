@@ -77,7 +77,20 @@ Home.servers.restart = async function(id) {
             resolve(false);
         }
     });
+}
+
+Home.servers.logs = async function(id) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let logs = JSON.parse(await Comms.post("serverlog", JSON.stringify({ id: id })));
+            resolve(logs);
+        } catch (err) {
+            resolve([]);
+        }
+    });
 };
+
+
 
 Home.files.list = async function(id, path) {
     return new Promise(async (resolve, reject) => {
@@ -156,7 +169,7 @@ UI.Components.serverLine = function(payload) {
     let root = document.createElement("div").attr("data-id", payload.id).chng("className", "server-line cont");
     
     let idEL = document.createElement("div").chng("className", "server-line id").chng("innerText", payload.id);
-    let aliasEL = document.createElement("div").chng("className", "server-line alias").chng("type", "text").chng("innerText", payload.alias);
+    let aliasEL = document.createElement("a").chng("className", "server-line alias").chng("type", "text").chng("innerText", payload.alias).chng("href", "/" + payload.alias).chng("target", "_blank").chng("rel", "nofollow");
     let portEL = document.createElement("div").chng("className", "server-line port").chng("type", "text").chng("innerText", payload.port);
     let runonbootEL = document.createElement("button").chng("className", "button toggle server-line runonboot").chng("disabled", true).chng("innerText", "Run On Boot");
     let runfileEL = document.createElement("div").chng("className", "server-line runfile").chng("type", "text").chng("innerText", payload.runfile);
@@ -199,6 +212,18 @@ UI.Components.file = function(name, loc, folder) {
     root.append(iconEL, fileEL, deleteEL);
 
     find("div.files-canvas").append(root);
+};
+
+UI.Components.logline = function(line) {
+    let root = document.createElement("div").chng("innerText", line.data);
+    
+    if (line.type == "log") {
+        root.chng("className", "logs-line rooter info");
+    } else if (line.type == "err") {
+        root.chng("className", "logs-line rooter error");
+    }
+
+    find("div.logs-canvas").append(root);
 };
 
 UI.Components.folder = function(name, loc) {
@@ -335,6 +360,19 @@ UI.edit.createServer = async function() {
 
 UI.showConfig();
 
+UI.showLogs = async function(id) {
+    try {
+        let list = await Home.servers.logs(id);
+        find("div.logs-canvas").innerHTML = "";
+        for (let i in list) {
+            UI.Components.logline(list[i]);
+        }
+        document.body.attr("data-mode", "logs");
+    } catch (err) {
+        console.err(err);
+    }
+};
+
 find("button.button.create.server-line.create").when("click", UI.edit.createServer);
 
 find("button.button.editor.return").when("click", UI.showConfig);
@@ -342,10 +380,12 @@ find("button.button.editor.return").when("click", UI.showConfig);
 find("button.button.editor.update").when("click", UI.edit.updateInfo);
 
 find("button.button.action.files.return").when("click", () => { UI.showEdit(UI.editing.id); });
+find("button.button.action.logger.return").when("click", () => { UI.showEdit(UI.editing.id); });
 
 find("button.button.editor.start").when("click", () => { Home.servers.start(UI.editing.id) });
 find("button.button.editor.stop").when("click", () => { Home.servers.stop(UI.editing.id) });
 find("button.button.editor.restart").when("click", () => { Home.servers.restart(UI.editing.id) });
+find("button.button.editor.logs").when("click", () => { UI.showLogs(UI.editing.id) });
 
 
 
@@ -368,6 +408,15 @@ Socket.on("stop", (data) => {
     } else if (mode == "edit") {
         if (UI.editing.id == data.target) {
             UI.showEdit(UI.editing.id);
+        }
+    }
+});
+
+Socket.on("log", (data) => {
+    let mode = document.body.getr("data-mode");
+    if (mode == "logs") {
+        if (UI.editing.id == data.target) {
+            UI.Components.logline(data.message);
         }
     }
 });
