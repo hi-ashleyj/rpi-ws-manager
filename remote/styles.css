@@ -79,8 +79,8 @@ input[type="text"]:focus {
 
 
 div.config, div.files, div.edit {
-    width: 50vw;
-    min-width: 300px;
+    width: 90vw;
+    min-width: 400px;
     max-width: 1000px;
     max-height: 90vh;
     overflow-y: auto;
@@ -142,7 +142,16 @@ div.edit:not([data-running]) button.button.editor.run {
     display: none;
 }
 
+a.editor.telegraph.alias {
+    pointer-events: none;
+    color: white;
+    text-decoration: none;
+}
 
+div.edit[data-running] a.editor.telegraph.alias {
+    pointer-events: all;
+    text-decoration: underline;
+}
 
 
 div.editor.staging {

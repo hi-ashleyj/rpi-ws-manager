@@ -213,6 +213,7 @@ UI.showEdit = async function(id) {
     
         find(".editor.id").chng("innerText", info.id);
         find(".editor.alias:not(input)").chng("innerText", info.alias);
+        find("a.editor.alias").chng("innerText", info.alias).chng("href", "/" + info.alias);
         find("input.editor.alias").chng("value", info.alias);
         find("input.editor.port").chng("value", info.port);
         if (info.runonboot) {
@@ -345,3 +346,28 @@ find("button.button.action.files.return").when("click", () => { UI.showEdit(UI.e
 find("button.button.editor.start").when("click", () => { Home.servers.start(UI.editing.id) });
 find("button.button.editor.stop").when("click", () => { Home.servers.stop(UI.editing.id) });
 find("button.button.editor.restart").when("click", () => { Home.servers.restart(UI.editing.id) });
+
+
+
+// Socket based refreshes
+Socket.on("start", (data) => {
+    let mode = document.body.getr("data-mode");
+    if (mode == "config") {
+        UI.showConfig();
+    } else if (mode == "edit") {
+        if (UI.editing.id == data.target) {
+            UI.showEdit(UI.editing.id);
+        }
+    }
+});
+
+Socket.on("stop", (data) => {
+    let mode = document.body.getr("data-mode");
+    if (mode == "config") {
+        UI.showConfig();
+    } else if (mode == "edit") {
+        if (UI.editing.id == data.target) {
+            UI.showEdit(UI.editing.id);
+        }
+    }
+});

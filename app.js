@@ -89,7 +89,7 @@ let SpawnedServer = function(id, process) {
         }
 
         u.running = false;
-        Manager.broadcast("stop", id);
+        Manager.broadcast("stop", u.id);
     });
 
     this.stop = function() {
@@ -127,11 +127,11 @@ Manager.save = async function() {
     
 }; 
 
-Manager.broadcast = function(type, id) {
+Manager.broadcast = function(type, ...data) {
     let output = { servers: Manager.listServers() };
 
     if (type == "start" || type == "stop") {
-        output.target ==  Manager.getServer(id);
+        output.target = data[0];
     }
 
     remoteSend(null, type, output);
