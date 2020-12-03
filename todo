@@ -13,6 +13,3 @@ Self - override global errors and use the error thing
 Self - when global exceptions thrown freeze everything apart from the http gets and self log info, then relay that info with our favourite http code 417 I'm a teapot
 
 Console - handle console command running and sending logs up
-
-Files - confirm file upload and folder creation
-Files - confirm delete files
