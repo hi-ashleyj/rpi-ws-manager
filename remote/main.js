@@ -178,7 +178,7 @@ UI.Components.serverLine = function(payload) {
         runonbootEL.attr("data-checked", true);
     }
     if (payload.running) {
-        root.attr("data-running", true)
+        root.attr("data-running", true);
     }
     editEL.when("click", () => {UI.showEdit(payload.id)});
 
@@ -210,10 +210,18 @@ UI.Components.file = function(name, loc, folder) {
     let deleteEL = document.createElement("div").chng("className", "file-line delete").attr("data-loc", JSON.stringify(loc));
 
     deleteEL.when("click", async (e) => {
-        await Home.files.delete(UI.editing.id, JSON.parse(e.target.getr("data-loc")));
-        if (document.body.getr("data-mode") == "files") {
-            UI.files.show(UI.files.loc);
+        if (e.target.getr("data-staged")) {
+            await Home.files.delete(UI.editing.id, JSON.parse(e.target.getr("data-loc")));
+            if (document.body.getr("data-mode") == "files") {
+                UI.files.show(UI.files.loc);
+            }
+        } else {
+            e.target.attr("data-staged", true);
+            if (e.target.parentNode.className == "file-line cont") {
+                e.target.parentNode.attr("data-staged");
+            }
         }
+        
     });
 
     root.append(iconEL, fileEL, deleteEL);
