@@ -548,7 +548,7 @@ let requestHandler = async function(req, res) {
                 callback = Requests.uploadFile;
             } else if (method == "deletefile") {
                 type = method;
-                callback = Requests.uploadFile;
+                callback = Requests.deleteFile;
             } else if (method == "start") {
                 type = method;
                 callback = Requests.startServer;

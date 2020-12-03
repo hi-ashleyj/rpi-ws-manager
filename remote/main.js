@@ -107,7 +107,7 @@ Home.files.upload = async function(id, path, dataBase64) {
     return new Promise(async (resolve, reject) => {
         try {
             let obj = JSON.parse(await Comms.post("uploadfile", JSON.stringify({id: id, path: path, dataBase64: dataBase64})));
-            resolve(obj.files);
+            resolve(obj.files); 
         } catch (err) {
             resolve(null);
         }
@@ -209,6 +209,13 @@ UI.Components.file = function(name, loc, folder) {
     let fileEL = document.createElement("div").chng("className", "file-line name").chng("innerText", name);
     let deleteEL = document.createElement("div").chng("className", "file-line delete").attr("data-loc", JSON.stringify(loc));
 
+    deleteEL.when("click", async (e) => {
+        await Home.files.delete(UI.editing.id, JSON.parse(e.target.getr("data-loc")));
+        if (document.body.getr("data-mode") == "files") {
+            UI.files.show(UI.files.loc);
+        }
+    });
+
     root.append(iconEL, fileEL, deleteEL);
 
     find("div.files-canvas").append(root);
@@ -300,16 +307,17 @@ UI.files.load = function(results) {
     }
     
     find("span.files-trace.content").chng("innerText", absoluteSTR);
-
-    console.log(results);
 }
 
 UI.on("update", UI.files.load);
+
+UI.files.loc = [];
 
 UI.files.show = async function(loc) {
     document.body.attr("data-mode", "files");
 
     UI.files.load(await Home.files.list(UI.editing.id, loc));
+    UI.files.loc = loc;
 };
 
 find("button.button.editor.fileman").when("click", () => { UI.files.show([]) });
@@ -387,7 +395,49 @@ find("button.button.editor.stop").when("click", () => { Home.servers.stop(UI.edi
 find("button.button.editor.restart").when("click", () => { Home.servers.restart(UI.editing.id) });
 find("button.button.editor.logs").when("click", () => { UI.showLogs(UI.editing.id) });
 
+let uploadCue = [];
+let reader = new FileReader();
+let currentUpload = null;
 
+let nextUpload = function() {
+    if (currentUpload == null && uploadCue.length > 0) {
+        currentUpload = uploadCue.shift();
+
+        reader.readAsDataURL(currentUpload.file);
+    } else {
+        if (document.body.getr("data-mode") == "files") {
+            UI.files.show(UI.files.loc);
+        }
+    }
+};
+
+let handleUpload = async function(_e) {
+    let data = reader.result;
+    let treated = data.split(",")[1];
+
+    await Home.files.upload(currentUpload.id, currentUpload.loc, treated);
+
+    currentUpload = null;
+    nextUpload();
+};
+
+reader.addEventListener("load", handleUpload);
+
+find("button.button.action.upload.file").when("click", () => {
+    find("input.files-upload[type=\"file\"]").click();
+});
+
+find("input.files-upload[type=\"file\"]").when("input", (e) => {
+    let list = e.target.files;
+
+    for (let i = 0; i < list.length; i++) {
+        let loc = new Array(...UI.files.loc);
+        loc.push(list[i].name);
+        uploadCue.push({ id: UI.editing.id, loc: loc, file: list[i]});
+    }
+
+    nextUpload();
+});
 
 // Socket based refreshes
 Socket.on("start", (data) => {
