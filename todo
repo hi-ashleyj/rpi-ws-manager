@@ -2,7 +2,6 @@ FE
 Console - button work and make console send available
 
 Files - handle create new folder
-Files - handle folder navigation
 
 Connection - when disconnect or get/post error, do connect detection (ping on post), then online detection (get ping from hi.ashleyj.me/ping), then display fullscreen errors about lack of connection.
 

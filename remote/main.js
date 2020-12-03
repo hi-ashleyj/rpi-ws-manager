@@ -191,6 +191,11 @@ UI.Components.file = function(name, loc, folder) {
     let root = document.createElement("div").attr("data-name", name).chng("className", "file-line cont");
     if (folder) {
         root.attr("data-folder", true);
+        root.when("click", (e) => {
+            if (e.target == root) {
+                UI.files.show(new Array(...UI.files.loc, name));
+            }
+        });
     }
 
     let icon = "png/unknown.png"
@@ -395,7 +400,15 @@ find("button.button.editor.return").when("click", UI.showConfig);
 
 find("button.button.editor.update").when("click", UI.edit.updateInfo);
 
-find("button.button.action.files.return").when("click", () => { UI.showEdit(UI.editing.id); });
+find("button.button.action.files.return").when("click", () => { 
+    if (UI.files.loc.length == 0) { 
+        UI.showEdit(UI.editing.id); 
+    } else { 
+        UI.files.loc.pop(); 
+        UI.files.show(UI.files.loc) 
+    } 
+});
+
 find("button.button.action.logger.return").when("click", () => { UI.showEdit(UI.editing.id); });
 
 find("button.button.editor.start").when("click", () => { Home.servers.start(UI.editing.id) });
