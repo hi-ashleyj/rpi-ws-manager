@@ -416,6 +416,31 @@ find("button.button.editor.stop").when("click", () => { Home.servers.stop(UI.edi
 find("button.button.editor.restart").when("click", () => { Home.servers.restart(UI.editing.id) });
 find("button.button.editor.logs").when("click", () => { UI.showLogs(UI.editing.id) });
 
+find("button.button.action.upload.folder").when("click", () => {
+    find("div.splash.folder").attr("data-active", true);
+});
+
+find("div.splash.folder").when("click", (e) => {
+    if (e.target == find("div.splash.folder")) {
+        e.target.rmtr("data-active");
+        find("input.input.action.create.folder").value = "";
+    }
+});
+
+find("input.input.action.create.folder").when("keypress", (e) => {
+    if (e.key.toLowerCase() == "enter") {
+        find("button.button.action.create.folder").click();
+    }
+});
+
+find("button.button.action.create.folder").when("click", async () => {
+    let name = find("input.input.action.create.folder").value;
+    await Home.files.upload(UI.editing.id, new Array(...UI.files.loc, name), "folder");
+
+    find("div.splash.folder").click();
+    UI.files.show(UI.files.loc);
+});
+
 let uploadCue = [];
 let reader = new FileReader();
 let currentUpload = null;

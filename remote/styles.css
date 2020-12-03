@@ -262,3 +262,52 @@ div.logs-line.rooter.error::before {
     padding: 2.5en;
     color: white;
 }
+
+div.splash {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+
+    opacity: 0;
+    pointer-events: none;
+    user-select: none;
+    z-index: -1;
+
+    transition-property: opacity, z-index;
+    transition-duration: 0.3s;
+    transition-timing-function: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+div.splash[data-active] {
+    opacity: 1;
+    pointer-events: all;
+    user-select: initial;
+    z-index: 10;
+}
+
+div.splash > div.inside {
+    background: #222222;
+    min-width: 200px;
+    min-height: 200px;
+    max-width: 90vw;
+    max-height: 90vh;
+
+    width: max-content;
+    height: min-content;
+
+    position: absolute;
+    padding: 1.5rem;
+    border: 1px solid #333333;
+    top: 50%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+}
+
+@media only screen and (min-width: 600px) {
+    div.splash > div.inside {
+        width: 40vw;
+    }
+}
