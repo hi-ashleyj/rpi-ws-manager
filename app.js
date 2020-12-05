@@ -7,6 +7,15 @@ let http = require("http");
 let child_process = require("child_process");
 let ws = require("ws");
 const { parse } = require("path");
+let ownLogs = [];
+
+let logxtra = function(...line) {
+    ownLogs.push(...line);
+    while (ownLogs.length > 100) {
+        ownLogs.shift();
+    }
+    console.log(...line);
+};
 
 let r403 = function(res) {
     res.writeHead(403, http.STATUS_CODES[403]);
@@ -49,7 +58,7 @@ Manager.getServer;
 
 Manager.runningServers = {};
 
-let SpawnedServer = function(id, process) {
+let SpawnedServer = function(id, process, silent) {
     this.id = id;
     this.log = [];
     this.running = true;
@@ -73,8 +82,10 @@ let SpawnedServer = function(id, process) {
     this.process.stdout.on("data", (chunk) => {
         let entry = { type: "log", data: chunk.toString() };
         u.log.push(entry);
-        Manager.broadcast("log", u.id, entry);
-
+        if (!silent) {
+            Manager.broadcast("log", u.id, entry);
+        }
+        
         while (u.log.length > 100) {
             u.log.shift();
         }
@@ -83,7 +94,9 @@ let SpawnedServer = function(id, process) {
     this.process.stderr.on("data", (chunk) => {
         let entry = { type: "err", data: chunk.toString() };
         u.log.push(entry);
-        Manager.broadcast("log", u.id, entry);
+        if (!silent) {
+            Manager.broadcast("log", u.id, entry);
+        }
 
         while (u.log.length > 100) {
             u.log.shift();
@@ -101,7 +114,9 @@ let SpawnedServer = function(id, process) {
         }
 
         u.running = false;
-        Manager.broadcast("stop", u.id);
+        if (!silent) {
+            Manager.broadcast("stop", u.id);
+        }
     });
 
     this.stop = function() {
@@ -147,6 +162,8 @@ Manager.broadcast = function(type, ...data) {
     } else if (type == "log") {
         output.target = data[0];
         output.message = data[1];
+    } else if (type == "script-complete") {
+        Object.assign(output, data[0]);
     }
 
     remoteSend(null, type, output);
@@ -190,18 +207,18 @@ Manager.spawnServer = function(id) {
 
 Manager.autoStart = function() {
     if (Manager.autoStartOnce) {
-        console.log("Autostart stopped");
+        logxtra("Autostart stopped");
         return;
     } else {
-        console.log("Autostarting " + Object.keys(Manager.servers).length + " server" + ((Object.keys(Manager.servers).length !== 1) ? "s" : ""));
+        logxtra("Autostarting " + Object.keys(Manager.servers).length + " server" + ((Object.keys(Manager.servers).length !== 1) ? "s" : ""));
         Manager.autoStartOnce = true;
 
         for (let id in Manager.servers) {
             if (Manager.servers[id].runonboot) {
                 Manager.spawnServer(id);
-                console.log("Starting server " + id);
+                logxtra("Starting server " + id);
             } else {
-                console.log("Didn't start server " + id);
+                logxtra("Didn't start server " + id);
             } 
         }
     }
@@ -324,6 +341,30 @@ Manager.getLogfile = function(id) {
     return [];
 };
 
+Manager.runNPM = function(id, args) {
+    return new Promise(async (resolve, reject) => {
+        if (args.length > 0) {
+            let options = {};
+        
+            options.cwd = path.resolve(documentsFolder, "" + id);
+        
+            let process = child_process.spawn("npm", args, options);
+
+            let instance = new SpawnedServer(id, process);
+
+            instance.on("stop", (code) => {
+                let logs = instance.log;
+
+                let res = { id: id, logs: logs, code: code, root: "npm" };
+                Manager.broadcast("script-complete", res);
+                resolve(res);
+            });
+        } else {
+            resolve(null);
+        }
+    }); 
+};
+
 // --- HTTP STUFF --- //
 
 let Requests = {};
@@ -358,12 +399,12 @@ Requests.path = function(req, res) {
     
             stream.on("error", () => {
                 res.statusCode = 404;
-                console.log("ERR|UNK: HSRV 404");
+                logxtra("ERR|UNK: HSRV 404");
                 res.end("Not Found");
             });
         } catch {
             res.statusCode = 404;
-            console.log("ERR|UNK: HSRV 404");
+            logxtra("ERR|UNK: HSRV 404");
             res.end("Not Found");
         }
         
@@ -507,7 +548,20 @@ Requests.deleteFile = async function(req, res, data) {
     }
 };
 
+Requests.runNPM = async function(req, res, data) {
+    let body = JSON.parse(data.toString("utf8"));
+    let resss = await Manager.runNPM(body.id, body.args);
 
+    if (resss) {
+        res.end(JSON.stringify(resss));
+    } else {
+        r403(res);
+    }
+};
+
+Requests.selfLogs = function(_req, res, _data) {
+    res.end(JSON.stringify(ownLogs));
+}
 
 let requestHandler = async function(req, res) {
     let parseIt = url.parse(req.url, true);
@@ -561,7 +615,13 @@ let requestHandler = async function(req, res) {
             } else if (method == "serverlog") {
                 type = method;
                 callback = Requests.getLogs;
-            } 
+            } else if (method == "runnpm") {
+                type = method;
+                callback = Requests.runNPM;
+            } else if (method == "ownlogs") {
+                type = method;
+                callback = Requests.selfLogs;
+            }
         }
 
         if (type !== "501") {
@@ -577,13 +637,13 @@ let requestHandler = async function(req, res) {
     
     if (type == "400") {
         res.writeHead(400, http.STATUS_CODES[400]);
-        console.log("ERR|UNK: MALFORMED");
+        logxtra("ERR|UNK: MALFORMED");
         res.end();
     }
 
     if (type == "501") {
         res.writeHead(501, http.STATUS_CODES[501]);
-        console.log("ERR|UNK: IDK REQ");
+        logxtra("ERR|UNK: IDK REQ");
         res.end();
     }
 };
@@ -608,7 +668,7 @@ remoteServer.on('connection', function (cl) {
 
 serverboi.listen({
     port: networkingPort
-}, () => {console.log("Listening on port " + networkingPort + " (http://localhost" + ((networkingPort == 80) ? "" : ":" + networkingPort) + ")")});
+}, () => {logxtra("Listening on port " + networkingPort + " (http://localhost" + ((networkingPort == 80) ? "" : ":" + networkingPort) + ")")});
 
 if (Object.keys(Manager.servers).length > 0) {
     Manager.autoStart();
