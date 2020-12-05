@@ -11,10 +11,10 @@ html, body {
 }
 
 button.button {
-    background: black;
+    background-color: black;
     color: white;
-    border: 1px solid #777777;
-    border-radius: 8px;
+    border: 1px solid #1e1e1e;
+    border-radius: 3px;
     filter: drop-shadow(0px 0px 5px black);
 
     transition-property: border, background-color;
@@ -32,11 +32,11 @@ button.button:disabled {
 }
 
 button.button:hover:not(:disabled) {
-    border: 1px solid #ffffff;
+    border: 1px solid #555555;
 }
 
 button.button:focus:not(:disabled)  {
-    border: 1px solid #999999;
+    border: 1px solid #888888;
     outline: none;
 }
 
@@ -240,6 +240,18 @@ div.logs-canvas {
     padding: 1rem;
     border-radius: 4px;
     font-family: 'Inconsolata', monospace;
+    overflow-y: auto;
+}
+
+div.logs-canvas-self {
+    background:black;
+    min-height: 50vh;
+    max-height: 80vh;
+    background: black;
+    padding: 1rem;
+    border-radius: 4px;
+    font-family: 'Inconsolata', monospace;
+    overflow-y: auto;
 }
 
 div.logs-line.rooter {
@@ -310,4 +322,20 @@ div.splash > div.inside {
     div.splash > div.inside {
         width: 40vw;
     }
+}
+
+button.self-logs-open {
+    position: absolute;
+    bottom: 1rem;
+    padding: 1.5rem;
+    border-radius: 50%;
+    left: 1rem;
+    height: 1rem;
+    width: 1rem;
+    border: none !important;
+    background-image: url("/svg/terminal.svg");
+    background-size: 50% 50%;
+    background-repeat: no-repeat;
+    background-position: center center;
+    z-index: 2;
 }

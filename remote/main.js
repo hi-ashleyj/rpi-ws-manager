@@ -1,6 +1,7 @@
 let Home = {};
 Home.servers = {};
 Home.files = {};
+Home.self = {};
 
 Home.servers.list = async function() {
     return new Promise(async (resolve, reject) => {
@@ -90,7 +91,16 @@ Home.servers.logs = async function(id) {
     });
 };
 
-
+Home.self.logs = async function() {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let logs = JSON.parse(await Comms.post("ownlogs", ""));
+            resolve(logs);
+        } catch (err) {
+            resolve([]);
+        }
+    });
+};
 
 Home.files.list = async function(id, path) {
     return new Promise(async (resolve, reject) => {
@@ -234,7 +244,7 @@ UI.Components.file = function(name, loc, folder) {
     find("div.files-canvas").append(root);
 };
 
-UI.Components.logline = function(line) {
+UI.Components.logline = function(container, line) {
     let root = document.createElement("div").chng("innerText", line.data);
     
     if (line.type == "log") {
@@ -243,7 +253,7 @@ UI.Components.logline = function(line) {
         root.chng("className", "logs-line rooter error");
     }
 
-    find("div.logs-canvas").append(root);
+    container.append(root);
 };
 
 UI.Components.folder = function(name, loc) {
@@ -383,10 +393,11 @@ UI.showConfig();
 
 UI.showLogs = async function(id) {
     try {
+        let container = find("div.logs-canvas");
         let list = await Home.servers.logs(id);
-        find("div.logs-canvas").innerHTML = "";
+        container.innerHTML = "";
         for (let i in list) {
-            UI.Components.logline(list[i]);
+            UI.Components.logline(container, list[i]);
         }
         document.body.attr("data-mode", "logs");
     } catch (err) {
@@ -439,6 +450,26 @@ find("button.button.action.create.folder").when("click", async () => {
 
     find("div.splash.folder").click();
     UI.files.show(UI.files.loc);
+});
+
+find("button.button.self-logs-open").when("click", async () => {
+    try {
+        let container = find("div.logs-canvas-self");
+        let list = await Home.self.logs();
+        container.innerHTML = "";
+        for (let i in list) {
+            UI.Components.logline(container, {type: "log", data: list[i]});
+        }
+        find("div.splash.self-log").attr("data-active", true);
+    } catch (err) {
+        console.err(err);
+    }
+});
+
+find("div.splash.self-log").when("click", (e) => {
+    if (e.target == find("div.splash.self-log")) {
+        e.target.rmtr("data-active");
+    }
 });
 
 let uploadCue = [];
@@ -512,7 +543,7 @@ Socket.on("log", (data) => {
     let mode = document.body.getr("data-mode");
     if (mode == "logs") {
         if (UI.editing.id == data.target) {
-            UI.Components.logline(data.message);
+            UI.Components.logline(find("div.logs-canvas"), data.message);
         }
     }
 });

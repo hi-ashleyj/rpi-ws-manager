@@ -4,7 +4,6 @@ Console - button work and make console send available
 Connection - when disconnect or get/post error, do connect detection (ping on post), then online detection (get ping from hi.ashleyj.me/ping), then display fullscreen errors about lack of connection.
 
 BE
-Self - add hooks for self logs for easy debugging
 Self - override global errors and use the error thing
 Self - when global exceptions thrown freeze everything apart from the http gets and self log info, then relay that info with our favourite http code 417 I'm a teapot
 

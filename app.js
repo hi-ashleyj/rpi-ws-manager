@@ -106,10 +106,10 @@ let SpawnedServer = function(id, process, silent) {
     this.process.on("exit", (code, signal) => {
         if (typeof code == "number") {
             // Exited itself
-            u.log.push("Exited by itself" + ((code == 0) ? "" : " (code " + code + "). Error Information may be available above."));
+            u.log.push({type: log, data: "Exited by itself" + ((code == 0) ? "" : " (code " + code + "). Error Information may be available above.")});
             u.fire("exit", code);
         } else if (typeof signal == "string") {
-            u.log.push("Terminated by signal: " + signal);
+            u.log.push({type: log, data: "Terminated by signal: " + signal});
             u.fire("stop", (typeof signal == "string"));
         }
 
@@ -117,6 +117,10 @@ let SpawnedServer = function(id, process, silent) {
         if (!silent) {
             Manager.broadcast("stop", u.id);
         }
+    });
+
+    this.process.on("error", (...args) => {
+        console.error(...args);
     });
 
     this.stop = function() {
@@ -347,15 +351,27 @@ Manager.runNPM = function(id, args) {
             let options = {};
         
             options.cwd = path.resolve(documentsFolder, "" + id);
+
+            let npmLoc = (os.platform == "win32" || process.platform == "win32") ? "npm.cmd" : "npm";
+
+            console.log(npmLoc, args, options);
         
-            let process = child_process.spawn("npm", args, options);
+            let process = child_process.spawn(npmLoc, args, options);
 
             let instance = new SpawnedServer(id, process);
 
             instance.on("stop", (code) => {
                 let logs = instance.log;
 
-                let res = { id: id, logs: logs, code: code, root: "npm" };
+                let res = { id: id, logs: logs, root: "npm" };
+                Manager.broadcast("script-complete", res);
+                resolve(res);
+            });
+
+            instance.on("exit", (code) => {
+                let logs = instance.log;
+
+                let res = { id: id, logs: logs, root: "npm" };
                 Manager.broadcast("script-complete", res);
                 resolve(res);
             });
