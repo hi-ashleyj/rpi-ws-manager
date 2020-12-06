@@ -143,6 +143,18 @@ UI.edit = {};
 UI.files = {};
 UI.fileicons = ["folder","html", "js", "css", "jpg", "png", "svg", "ttf", "woff", "woff2", "json", "txt"];
 
+UI.broken = false;
+
+UI.breakIt = function() {
+    document.body.attr("data-mode", "broken");
+    find("button.button.self-logs-open").click();
+};
+
+Comms.on("broken", () => {
+    UI.broken = true;
+    UI.breakIt();
+});
+
 UI.on = function(type, call) {
     UI.events.push({type, call});
 };
@@ -458,7 +470,7 @@ find("button.button.self-logs-open").when("click", async () => {
         let list = await Home.self.logs();
         container.innerHTML = "";
         for (let i in list) {
-            UI.Components.logline(container, {type: "log", data: list[i]});
+            UI.Components.logline(container, list[i]);
         }
         find("div.splash.self-log").attr("data-active", true);
     } catch (err) {
@@ -467,7 +479,7 @@ find("button.button.self-logs-open").when("click", async () => {
 });
 
 find("div.splash.self-log").when("click", (e) => {
-    if (e.target == find("div.splash.self-log")) {
+    if (e.target == find("div.splash.self-log") && !UI.broken) {
         e.target.rmtr("data-active");
     }
 });

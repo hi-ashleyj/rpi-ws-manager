@@ -262,17 +262,13 @@ div.logs-line.rooter {
 div.logs-line.rooter.info::before {
     content: "LOG";
     margin-right: 2.5ex;
-    color: #db188a;
-}
-
-div.logs-line.rooter.error {
-    color: #aa4444;
+    color: #7700cc;
 }
 
 div.logs-line.rooter.error::before {
     content: "ERR";
-    padding: 2.5en;
-    color: white;
+    margin-right: 2.5ex;
+    color: #aa0000;
 }
 
 div.splash {
@@ -338,4 +334,14 @@ button.self-logs-open {
     background-repeat: no-repeat;
     background-position: center center;
     z-index: 2;
+}
+
+div.logs-broken {
+    font-size: 2rem;
+    display: none;
+}
+
+body[data-mode="broken"] div.logs-broken {
+    display: block;
+    padding-bottom: 1rem;
 }

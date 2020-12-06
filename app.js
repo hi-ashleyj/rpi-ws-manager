@@ -8,9 +8,12 @@ let child_process = require("child_process");
 let ws = require("ws");
 const { parse } = require("path");
 let ownLogs = [];
+let criticalException = false;
 
 let logxtra = function(...line) {
-    ownLogs.push(...line);
+    for (let lx of line) {
+        ownLogs.push({type: "log", data: lx});
+    }
     while (ownLogs.length > 100) {
         ownLogs.shift();
     }
@@ -595,7 +598,15 @@ let requestHandler = async function(req, res) {
 
         if (req.method == "POST") {
             // Always use post for server functions
-            if (method == "newserver") {
+            if (method == "ownlogs") {
+                type = method;
+                callback = Requests.selfLogs;
+            } else if (criticalException) {
+                type = "except";
+                callback = () => {};
+                res.writeHead(418, http.STATUS_CODES[418]);
+                res.end(JSON.stringify({ error: "ERR|CRT", message: "Main Process encountered a critical exception", logs: ownLogs }));
+            } else if (method == "newserver") {
                 type = method;
                 callback = Requests.newServer;
             } else if (method == "getserver") {
@@ -634,10 +645,10 @@ let requestHandler = async function(req, res) {
             } else if (method == "runnpm") {
                 type = method;
                 callback = Requests.runNPM;
-            } else if (method == "ownlogs") {
-                type = method;
-                callback = Requests.selfLogs;
-            }
+            } else if (method == "throwerror") {
+                res.end();
+                throw new Error("This is a test error.");
+            } 
         }
 
         if (type !== "501") {
@@ -689,3 +700,10 @@ serverboi.listen({
 if (Object.keys(Manager.servers).length > 0) {
     Manager.autoStart();
 }
+
+process.on("uncaughtException", (err) => {
+    ownLogs.push({ type: "err", data: "Critical Error" });
+    ownLogs.push({ type: "err", data: err.name });
+    ownLogs.push({ type: "err", data: err.message });
+    criticalException = true;
+});
