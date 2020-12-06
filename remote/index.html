@@ -80,8 +80,13 @@
             <button class="button action logger return">&lt;&nbsp;Return</button><br />
             <br />
             <div class="logs-canvas"></div>
-            <div class="logs-runner" hidden>
-                Execute: <input type="text" class="logger runtime console" />
+            <div class="logs-runner">
+                <div style="display: grid; grid-template-columns: max-content 1fr max-content; align-items: center; gap: 0.5rem; padding-bottom: 2rem">
+                    <span style="font-family: 'Inconsolata';">npm</span>
+                    <span><input type="text" class="logger runtime console" style="font-family: 'Inconsolata';" /></span>
+                    <button class="button action logger runtime gotime">&gt; &gt; &gt;</button>
+                </div>
+                <div class="runtime-logs"></div>
             </div>
         </div>
 

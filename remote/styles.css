@@ -1,7 +1,14 @@
+@keyframes loading {
+    0%{background-position:0% 52%}
+    50%{background-position:100% 49%}
+    100%{background-position:0% 52%}
+}
+
 * {
     box-sizing: border-box;
     font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
+
 
 html, body {
     margin: 0px;
@@ -74,7 +81,20 @@ input[type="text"]:focus {
     outline: none;
 }
 
+div::-webkit-scrollbar {
+    -webkit-appearance: none;
+    appearance: none;
+    overflow-x: visible;
+    width: 6px;
+    height: 6px;
+}
 
+div::-webkit-scrollbar-thumb {
+    background: #aaaaaa;
+    border-radius: 3px;
+    width: 6px;
+    height: 6px;
+}
 
 
 
@@ -108,6 +128,10 @@ body[data-mode="files"] div.files {
 }
 
 body[data-mode="logs"] div.logs {
+    display: block;
+}
+
+body[data-mode="console"] div.logs {
     display: block;
 }
 
@@ -234,8 +258,8 @@ div.uploads-cont {
 
 div.logs-canvas {
     background:black;
-    min-height: 50vh;
-    max-height: 80vh;
+    min-height: 45vh;
+    max-height: 70vh;
     background: black;
     padding: 1rem;
     border-radius: 4px;
@@ -254,7 +278,26 @@ div.logs-canvas-self {
     overflow-y: auto;
 }
 
+div.runtime-logs {
+    background:black;
+    height: 20vh;
+    background: black;
+    padding: 1rem;
+    border-radius: 4px;
+    font-family: 'Inconsolata', monospace;
+    overflow-y: auto;
+}
+
+div.runtime-logs[data-thinking] {
+    background-image: linear-gradient(315deg, #000000, #db188a);
+    background-size: 400% 400%;
+    animation: loading 4s cubic-bezier(0.77, 0, 0.175, 1) infinite;
+}
+
 div.logs-line.rooter {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    align-items: center;
     font-family: 'Inconsolata', monospace;
     color: white;
 }
@@ -345,3 +388,13 @@ body[data-mode="broken"] div.logs-broken {
     display: block;
     padding-bottom: 1rem;
 }
+
+div.logs-runner {
+    display: none;
+}
+
+body[data-mode="console"] div.logs-runner {
+    display: block;
+    padding-top: 1rem;
+}
+

@@ -2,6 +2,7 @@ let Home = {};
 Home.servers = {};
 Home.files = {};
 Home.self = {};
+Home.script = {};
 
 Home.servers.list = async function() {
     return new Promise(async (resolve, reject) => {
@@ -84,6 +85,17 @@ Home.servers.logs = async function(id) {
     return new Promise(async (resolve, reject) => {
         try {
             let logs = JSON.parse(await Comms.post("serverlog", JSON.stringify({ id: id })));
+            resolve(logs);
+        } catch (err) {
+            resolve([]);
+        }
+    });
+};
+
+Home.script.npm = async function(id, args) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let logs = JSON.parse(await Comms.post("runnpm", JSON.stringify({ id: id, args: args })));
             resolve(logs);
         } catch (err) {
             resolve([]);
@@ -437,11 +449,44 @@ find("button.button.action.logger.return").when("click", () => { UI.showEdit(UI.
 find("button.button.editor.start").when("click", () => { Home.servers.start(UI.editing.id) });
 find("button.button.editor.stop").when("click", () => { Home.servers.stop(UI.editing.id) });
 find("button.button.editor.restart").when("click", () => { Home.servers.restart(UI.editing.id) });
+
 find("button.button.editor.logs").when("click", () => { UI.showLogs(UI.editing.id) });
+find("button.button.editor.console").when("click", () => { UI.showLogs(UI.editing.id).then(() => { document.body.attr("data-mode", "console"); find("div.runtime-logs").innerHTML = ""; }); });
 
 find("button.button.action.upload.folder").when("click", () => {
     find("div.splash.folder").attr("data-active", true);
 });
+
+find("button.button.action.logger.runtime.gotime").when("click", async () => {
+    let args = find("input.logger.runtime.console").value.split(" ");
+
+    if (find("div.runtime-logs").getr("data-thinking")) {
+        return;
+    }
+
+    try {
+        let container = find("div.runtime-logs");
+        find("input.logger.runtime.console").value = "";
+        container.innerHTML = "";
+        find("div.runtime-logs").attr("data-thinking", true);
+        let body = await Home.script.npm(UI.editing.id, args);
+        find("div.runtime-logs").rmtr("data-thinking");
+        let list = body.logs;
+        console.log(list);
+        for (let i in list) {
+            UI.Components.logline(container, list[i]);
+        }
+    } catch (err) {
+        console.err(err);
+    }
+});
+
+find("input.logger.runtime.console").when("keypress", (e) => {
+    if (e.key.toLowerCase() == "enter") {
+        find("button.button.action.logger.runtime.gotime").click();
+    }
+});
+
 
 find("div.splash.folder").when("click", (e) => {
     if (e.target == find("div.splash.folder")) {

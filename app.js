@@ -109,10 +109,10 @@ let SpawnedServer = function(id, process, silent) {
     this.process.on("exit", (code, signal) => {
         if (typeof code == "number") {
             // Exited itself
-            u.log.push({type: log, data: "Exited by itself" + ((code == 0) ? "" : " (code " + code + "). Error Information may be available above.")});
+            u.log.push({type: "log", data: "Exited by itself" + ((code == 0) ? "" : " (code " + code + "). Error Information may be available above.")});
             u.fire("exit", code);
         } else if (typeof signal == "string") {
-            u.log.push({type: log, data: "Terminated by signal: " + signal});
+            u.log.push({type: "log", data: "Terminated by signal: " + signal});
             u.fire("stop", (typeof signal == "string"));
         }
 
@@ -356,8 +356,6 @@ Manager.runNPM = function(id, args) {
             options.cwd = path.resolve(documentsFolder, "" + id);
 
             let npmLoc = (os.platform == "win32" || process.platform == "win32") ? "npm.cmd" : "npm";
-
-            console.log(npmLoc, args, options);
         
             let process = child_process.spawn(npmLoc, args, options);
 
@@ -702,8 +700,8 @@ if (Object.keys(Manager.servers).length > 0) {
 }
 
 process.on("uncaughtException", (err) => {
-    ownLogs.push({ type: "err", data: "Critical Error" });
     ownLogs.push({ type: "err", data: err.name });
     ownLogs.push({ type: "err", data: err.message });
     criticalException = true;
+    console.error(err);
 });
